@@ -8,10 +8,17 @@
 // 🔴 REMPLACER PAR VOTRE URL APPS SCRIPT
 const SMARTQR_API_URL = "https://script.google.com/macros/s/AKfycbySYNeiTcDTg_WWFb0eMqsMfupOSoDzVBLxE54ZRwOsmx3HJlijjbhMPAd99QDe2q86/exec";
 
-// Détection du magasin depuis l'URL
+// Détection du magasin depuis l'URL ou localStorage
 function getMagasinId() {
+  // 1. Vérifier l'URL
   const params = new URLSearchParams(window.location.search);
-  return params.get('magasin') || params.get('store') || 'default';
+  const urlMagasin = params.get('magasin') || params.get('store');
+  
+  // 2. Vérifier localStorage
+  const storedMagasin = localStorage.getItem('smartqr_magasin');
+  
+  // 3. Priorité: URL > localStorage > default
+  return urlMagasin || storedMagasin || 'default';
 }
 
 const SmartQRApi = {
@@ -27,6 +34,8 @@ const SmartQRApi = {
         if (v !== null && v !== undefined) url.searchParams.set(k, v);
       });
       
+      console.log(`[GET] ${action}`, { magasin: this.magasinId, params });
+      
       const res = await fetch(url.toString());
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
@@ -40,13 +49,17 @@ const SmartQRApi = {
 
   async post(action, payload = {}) {
     try {
+      const body = JSON.stringify(Object.assign({ 
+        action, 
+        magasinId: this.magasinId 
+      }, payload));
+      
+      console.log(`[POST] ${action}`, { magasin: this.magasinId, payload });
+      
       const res = await fetch(SMARTQR_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(Object.assign({ 
-          action, 
-          magasinId: this.magasinId 
-        }, payload))
+        body: body
       });
       
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
