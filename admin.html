@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartQR Admin — Dashboard Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  /* ===== THEMES ===== */
+  :root {
+    --bg:#0D0E10; --panel:#18191D; --paper:#F8F7F4; --ink:#1A1A1A;
+    --saffron:#E8A33D; --basil:#4C8C4A; --brick:#C1483D; --line:#2A2D32;
+    --radius:16px; --shadow:0 8px 32px rgba(0,0,0,0.3);
+    --text-primary:#E8EDF2; --text-secondary:#88909B; --text-inverse:#1A1A1A;
+    --card-bg:#18191D; --border-color:#2A2D32;
+    --input-bg:#0D0E10; --input-border:#2A2D32;
+    --hover-bg:rgba(232,163,61,0.08);
+    --scrollbar:#2A2D32;
+  }
+
+  [data-theme="light"] {
+    --bg:#F5F3F0; --panel:#FFFFFF; --paper:#FAF7F2; --ink:#1A1A1A;
+    --line:#E5E0D8; --text-primary:#1A1A1A; --text-secondary:#6B6459;
+    --card-bg:#FFFFFF; --border-color:#E5E0D8;
+    --input-bg:#F5F3F0; --input-border:#D5D0C8;
+    --shadow:0 8px 32px rgba(0,0,0,0.08);
+    --hover-bg:rgba(232,163,61,0.12);
+    --scrollbar:#D5D0C8;
+  }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { 
+    margin:0; background:var(--bg); color:var(--text-primary);
+    font-family:'Inter',sans-serif; padding:24px 32px 60px;
+    min-height:100vh; transition:background 0.3s, color 0.3s;
+  }
+  
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width:4px; height:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--scrollbar); border-radius:4px; }
+
+  /* ===== HEADER ===== */
+  .app-header {
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:12px; margin-bottom:8px;
+  }
+  .app-header h1 { font-family:'Fraunces',serif; font-size:28px; }
+  
+  .header-controls {
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  
+  .theme-toggle, .lang-toggle {
+    background:var(--panel); border:1px solid var(--border-color);
+    border-radius:10px; padding:8px 14px; cursor:pointer;
+    color:var(--text-primary); font-size:14px; font-weight:600;
+    transition:0.2s; display:flex; align-items:center; gap:6px;
+  }
+  .theme-toggle:hover, .lang-toggle:hover {
+    border-color:var(--saffron);
+  }
+  .theme-toggle .icon { font-size:18px; }
+
+  .sub { 
+    color:var(--text-secondary); font-size:13px; 
+    margin-bottom:24px; display:flex; justify-content:space-between;
+    align-items:center; flex-wrap:wrap; gap:8px;
+  }
+  .status-badge { 
+    background:var(--basil); padding:4px 12px; border-radius:20px; 
+    font-size:11px; font-weight:600; color:#fff;
+  }
+  .status-badge.offline { background:var(--brick); }
+
+  /* ===== AUTH ===== */
+  .auth-box { 
+    background:var(--panel); border:1px solid var(--saffron); 
+    border-radius:var(--radius); padding:32px;
+    max-width:420px; margin:40px auto; box-shadow:var(--shadow);
+    text-align:center;
+  }
+  .auth-box h3 { font-family:'Fraunces',serif; font-size:20px; margin-bottom:16px; }
+  .input-field { 
+    width:100%; padding:14px 16px; margin:8px 0; border-radius:10px;
+    border:1px solid var(--input-border); background:var(--input-bg);
+    color:var(--text-primary); font-size:15px; transition:0.2s;
+    outline:none;
+  }
+  .input-field:focus { border-color:var(--saffron); box-shadow:0 0 0 3px rgba(232,163,61,0.15); }
+  .input-field::placeholder { color:var(--text-secondary); opacity:0.6; }
+  
+  .btn { 
+    background:var(--saffron); color:var(--text-inverse); border:none;
+    border-radius:10px; padding:14px 24px; cursor:pointer;
+    font-weight:700; width:100%; font-size:15px; transition:0.2s;
+  }
+  .btn:hover { transform:scale(1.01); box-shadow:0 4px 16px rgba(232,163,61,0.3); }
+  .btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+  .btn-danger { background:var(--brick); color:#fff; }
+  .btn-danger:hover { box-shadow:0 4px 16px rgba(193,72,61,0.3); }
+  .btn-success { background:var(--basil); color:#fff; }
+  .btn-success:hover { box-shadow:0 4px 16px rgba(76,140,74,0.3); }
+  .btn-sm { padding:6px 14px; width:auto; font-size:12px; }
+
+  /* ===== DASHBOARD ===== */
+  .hidden-panel { display:none; }
+  
+  .kpis { 
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); 
+    gap:16px; margin-bottom:28px;
+  }
+  .kpi { 
+    background:var(--panel); border:1px solid var(--border-color);
+    border-radius:var(--radius); padding:18px 22px;
+    transition:0.2s;
+  }
+  .kpi:hover { border-color:var(--saffron); }
+  .kpi .label { 
+    font-family:'IBM Plex Mono',monospace; font-size:11px; 
+    color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;
+  }
+  .kpi .value { 
+    font-family:'Fraunces',serif; font-size:30px; font-weight:700;
+    color:var(--saffron); margin-top:4px;
+  }
+
+  /* ===== GRID ===== */
+  .grid-2 { display:grid; grid-template-columns:1.3fr 0.7fr; gap:24px; margin-top:24px; }
+  .grid-3 { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:24px; margin-top:24px; }
+  
+  .panel-card { 
+    background:var(--panel); border:1px solid var(--border-color);
+    border-radius:var(--radius); padding:24px;
+    transition:0.2s;
+  }
+  .panel-card:hover { border-color:rgba(232,163,61,0.3); }
+  .panel-card .card-title {
+    font-family:'Fraunces',serif; font-size:18px;
+    margin-bottom:16px; display:flex; justify-content:space-between;
+    align-items:center;
+  }
+
+  /* ===== FORM ===== */
+  .form-group { margin-bottom:14px; }
+  .form-group label { 
+    display:block; font-size:12px; color:var(--text-secondary);
+    margin-bottom:4px; font-weight:500; text-transform:uppercase;
+    letter-spacing:0.3px;
+  }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .preview-img { 
+    width:100%; max-height:180px; object-fit:cover; border-radius:10px;
+    display:none; margin-top:10px; border:1px solid var(--border-color);
+  }
+  .file-upload { 
+    position:relative; padding:24px; border:2px dashed var(--border-color);
+    border-radius:10px; text-align:center; cursor:pointer; transition:0.2s;
+  }
+  .file-upload:hover { border-color:var(--saffron); }
+  .file-upload input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+  .file-upload .hint { color:var(--text-secondary); font-size:13px; }
+
+  /* ===== TABLE / MENU LIST ===== */
+  .menu-table-wrap {
+    max-height:400px; overflow-y:auto; border-radius:10px;
+    border:1px solid var(--border-color);
+  }
+  .menu-table {
+    width:100%; border-collapse:collapse; font-size:13px;
+  }
+  .menu-table th {
+    background:var(--bg); color:var(--text-secondary);
+    font-weight:600; text-align:left; padding:10px 12px;
+    position:sticky; top:0; z-index:2; font-size:11px;
+    text-transform:uppercase; letter-spacing:0.3px;
+  }
+  .menu-table td {
+    padding:10px 12px; border-bottom:1px solid var(--border-color);
+    vertical-align:middle;
+  }
+  .menu-table tr:hover td { background:var(--hover-bg); }
+  .menu-table .dish-img-sm {
+    width:36px; height:36px; border-radius:6px; object-fit:cover;
+    background:#eee;
+  }
+  .menu-table .status-dot {
+    display:inline-block; width:8px; height:8px; border-radius:50%;
+    margin-right:4px;
+  }
+  .menu-table .status-dot.available { background:var(--basil); }
+  .menu-table .status-dot.unavailable { background:var(--brick); }
+
+  .action-group { display:flex; gap:4px; flex-wrap:wrap; }
+  .action-group .btn-sm { padding:4px 10px; font-size:11px; }
+
+  /* ===== QR ===== */
+  .qr-grid { 
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+    gap:10px; max-height:300px; overflow-y:auto; padding-right:4px;
+  }
+  .qr-item {
+    background:var(--bg); padding:10px; text-align:center;
+    border-radius:10px; border:1px solid var(--border-color);
+    transition:0.2s;
+  }
+  .qr-item:hover { border-color:var(--saffron); transform:translateY(-2px); }
+  .qr-item img { width:100%; max-width:80px; border-radius:6px; }
+  .qr-item .label { font-size:11px; font-weight:600; margin-top:4px; display:block; }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position:fixed; bottom:24px; right:24px; padding:14px 24px;
+    border-radius:12px; background:var(--basil); color:#fff;
+    font-weight:600; box-shadow:var(--shadow); z-index:1000;
+    transform:translateY(120px); opacity:0; transition:0.4s ease;
+    max-width:400px;
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.error { background:var(--brick); }
+  .toast .toast-close {
+    background:none; border:none; color:#fff; font-size:18px;
+    cursor:pointer; margin-left:12px; opacity:0.7;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width:1024px) {
+    .grid-2 { grid-template-columns:1fr; }
+    .grid-3 { grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:768px) {
+    body { padding:16px; }
+    .grid-3 { grid-template-columns:1fr; }
+    .form-row { grid-template-columns:1fr; }
+    .kpis { grid-template-columns:1fr 1fr; }
+    .app-header h1 { font-size:22px; }
+    .auth-box { margin:20px auto; padding:24px; }
+    .header-controls .lang-toggle span { display:none; }
+  }
+  @media (max-width:480px) {
+    .kpis { grid-template-columns:1fr; }
+    .app-header { flex-direction:column; align-items:stretch; }
+    .header-controls { justify-content:center; }
+    .sub { flex-direction:column; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="app-header">
+  <h1>📊 SmartQR Restaurant</h1>
+  <div class="header-controls">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème">
+      <span class="icon" id="themeIcon">🌙</span>
+    </button>
+    <button class="lang-toggle" onclick="toggleLang()">
+      🌐 <span id="langLabel">FR</span>
+    </button>
+    <button class="lang-toggle" onclick="logout()" style="border-color:var(--brick);">
+      🚪 <span>Déconnexion</span>
+    </button>
+  </div>
+</div>
+
+<div class="sub">
+  <span id="dateLabel"></span>
+  <span class="status-badge" id="syncStatus">🟢 Connecté</span>
+</div>
+
+<!-- ===== AUTH ===== -->
+<div class="auth-box" id="lockScreen">
+  <h3 id="loginTitle">🔐 Accès Administrateur</h3>
+  <p id="loginSub" style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Connectez-vous pour gérer votre restaurant</p>
+  <input type="text" id="userIn" class="input-field" placeholder="Identifiant" value="admin">
+  <input type="password" id="passIn" class="input-field" placeholder="Mot de passe" value="admin">
+  <button class="btn" onclick="verifyLogin()" id="loginBtn">Se connecter</button>
+  <p style="font-size:11px;color:var(--text-secondary);margin-top:12px;">Démo: admin / admin</p>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="mainDashboard" class="hidden-panel">
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi"><div class="label" id="kpi1Label">Chiffre d'Affaires</div><div class="value" id="kpi-ca">—</div></div>
+    <div class="kpi"><div class="label" id="kpi2Label">Commandes du jour</div><div class="value" id="kpi-nb">—</div></div>
+    <div class="kpi"><div class="label" id="kpi3Label">Panier Moyen</div><div class="value" id="kpi-panier">—</div></div>
+  </div>
+
+  <!-- GRID 3: Menu + Formulaire + QR -->
+  <div class="grid-3">
+    
+    <!-- ===== LISTE DES PLATS ===== -->
+    <div class="panel-card">
+      <div class="card-title">
+        <span id="menuTitle">📋 Menu</span>
+        <button class="btn btn-sm btn-success" onclick="refreshMenu()">🔄 Rafraîchir</button>
+      </div>
+      <div class="menu-table-wrap" id="menuListContainer">
+        <div style="text-align:center;padding:30px;color:var(--text-secondary);">
+          ⏳ Chargement du menu...
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== FORMULAIRE ===== -->
+    <div class="panel-card">
+      <div class="card-title">
+        <span id="formTitle">🍲 Ajouter un Plat</span>
+        <button class="btn btn-sm" style="background:var(--border-color);" onclick="resetForm()">✖</button>
+      </div>
+      <form id="dishForm" onsubmit="uploadPlat(event)">
+        <input type="hidden" id="editId" value="">
+        
+        <div class="form-group">
+          <label id="fNomLabel">Nom du Plat (Français | English | العربية)</label>
+          <input type="text" id="pNom" class="input-field" placeholder="Ex: Salade César | Caesar Salad | سلطة سيزر" required>
+        </div>
+        
+        <div class="form-group">
+          <label id="fDescLabel">Description</label>
+          <input type="text" id="pDesc" class="input-field" placeholder="Ex: Poulet, parmesan... | Chicken, parmesan..." required>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label id="fCatLabel">Catégorie</label>
+            <input type="text" id="pCat" class="input-field" placeholder="CAT1" required>
+          </div>
+          <div class="form-group">
+            <label id="fPrixLabel">Prix (DA)</label>
+            <input type="number" id="pPrix" class="input-field" placeholder="1200" required min="0" step="10">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label id="fDispoLabel">Disponibilité</label>
+          <select id="pDispo" class="input-field">
+            <option value="true">✅ Disponible</option>
+            <option value="false">❌ Épuisé</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label id="fImageLabel">📷 Image</label>
+          <div class="file-upload">
+            <span class="hint">📤 Cliquez pour télécharger</span>
+            <input type="file" id="pFile" accept="image/*" capture="environment" onchange="processFile()">
+          </div>
+          <img id="imgView" class="preview-img" alt="Aperçu">
+        </div>
+        
+        <div style="display:flex;gap:10px;">
+          <button type="submit" class="btn btn-success" id="submitBtn">💾 Enregistrer</button>
+          <button type="button" class="btn btn-danger" id="deleteBtn" style="display:none;width:auto;padding:14px 20px;" onclick="deleteProduit()">🗑️ Supprimer</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ===== QR CODES ===== -->
+    <div class="panel-card">
+      <div class="card-title">
+        <span id="qrTitle">📍 Tables & QR</span>
+        <button class="btn btn-sm" style="background:var(--border-color);" onclick="loadQRCodes()">🔄</button>
+      </div>
+      <div class="form-group">
+        <label id="urlLabel">URL de base</label>
+        <input class="input-field" id="frontUrl" value="https://votre-compte.github.io/smartqr/">
+      </div>
+      <div class="qr-grid" id="qrContainer">
+        <div style="color:var(--text-secondary);text-align:center;padding:20px;grid-column:1/-1;">Chargement...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast">
+  <span id="toastMsg"></span>
+  <button class="toast-close" onclick="closeToast()">×</button>
+</div>
+
+<script src="config.js"></script>
+<script>
+  // ============================================================
+  // SMARTQR ADMIN - Version Complète
+  // ============================================================
+
+  // ---- ÉTAT ----
+  let currentLang = localStorage.getItem('smartqr_lang') || 'fr';
+  let currentTheme = localStorage.getItem('smartqr_theme') || 'dark';
+  let editMode = false;
+  let menuData = [];
+
+  // ---- DICTIONNAIRE ----
+  const DICT = {
+    fr: {
+      loginTitle: '🔐 Accès Administrateur',
+      loginSub: 'Connectez-vous pour gérer votre restaurant',
+      loginBtn: 'Se connecter',
+      menuTitle: '📋 Menu',
+      formTitle: '🍲 Ajouter un Plat',
+      fNomLabel: 'Nom du Plat (Français | English | العربية)',
+      fDescLabel: 'Description (Français | English | العربية)',
+      fCatLabel: 'Catégorie',
+      fPrixLabel: 'Prix (DA)',
+      fDispoLabel: 'Disponibilité',
+      fImageLabel: '📷 Image',
+      submitBtn: '💾 Enregistrer',
+      deleteBtn: '🗑️ Supprimer',
+      qrTitle: '📍 Tables & QR',
+      urlLabel: 'URL de base',
+      kpi1: 'Chiffre d\'Affaires',
+      kpi2: 'Commandes du jour',
+      kpi3: 'Panier Moyen',
+      available: 'Disponible',
+      unavailable: 'Épuisé',
+      edit: 'Modifier',
+      delete: 'Supprimer',
+      confirmDelete: 'Confirmer la suppression de ce plat ?',
+      toastSaved: '✅ Plat enregistré avec succès !',
+      toastDeleted: '🗑️ Plat supprimé !',
+      toastError: '❌ Erreur: ',
+      toastEmpty: 'Veuillez remplir tous les champs',
+    },
+    en: {
+      loginTitle: '🔐 Admin Access',
+      loginSub: 'Login to manage your restaurant',
+      loginBtn: 'Sign in',
+      menuTitle: '📋 Menu',
+      formTitle: '🍲 Add Dish',
+      fNomLabel: 'Dish Name (French | English | العربية)',
+      fDescLabel: 'Description (French | English | العربية)',
+      fCatLabel: 'Category',
+      fPrixLabel: 'Price (DA)',
+      fDispoLabel: 'Availability',
+      fImageLabel: '📷 Image',
+      submitBtn: '💾 Save',
+      deleteBtn: '🗑️ Delete',
+      qrTitle: '📍 Tables & QR',
+      urlLabel: 'Base URL',
+      kpi1: 'Revenue',
+      kpi2: 'Orders Today',
+      kpi3: 'Average Cart',
+      available: 'Available',
+      unavailable: 'Out of Stock',
+      edit: 'Edit',
+      delete: 'Delete',
+      confirmDelete: 'Confirm deletion of this dish?',
+      toastSaved: '✅ Dish saved successfully!',
+      toastDeleted: '🗑️ Dish deleted!',
+      toastError: '❌ Error: ',
+      toastEmpty: 'Please fill all fields',
+    },
+    ar: {
+      loginTitle: '🔐 دخول المدير',
+      loginSub: 'سجل الدخول لإدارة مطعمك',
+      loginBtn: 'تسجيل الدخول',
+      menuTitle: '📋 القائمة',
+      formTitle: '🍲 إضافة طبق',
+      fNomLabel: 'اسم الطبق (Français | English | العربية)',
+      fDescLabel: 'الوصف (Français | English | العربية)',
+      fCatLabel: 'الفئة',
+      fPrixLabel: 'السعر (DA)',
+      fDispoLabel: 'التوفر',
+      fImageLabel: '📷 صورة',
+      submitBtn: '💾 حفظ',
+      deleteBtn: '🗑️ حذف',
+      qrTitle: '📍 الطاولات و QR',
+      urlLabel: 'الرابط الأساسي',
+      kpi1: 'الإيرادات',
+      kpi2: 'طلبات اليوم',
+      kpi3: 'متوسط السلة',
+      available: 'متوفر',
+      unavailable: 'نفد',
+      edit: 'تعديل',
+      delete: 'حذف',
+      confirmDelete: 'تأكيد حذف هذا الطبق؟',
+      toastSaved: '✅ تم حفظ الطبق بنجاح!',
+      toastDeleted: '🗑️ تم حذف الطبق!',
+      toastError: '❌ خطأ: ',
+      toastEmpty: 'يرجى ملء جميع الحقول',
+    }
+  };
+
+  // ---- INIT ----
+  document.addEventListener('DOMContentLoaded', () => {
+    // Date
+    document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('fr-FR', {
+      weekday:'long', year:'numeric', month:'long', day:'numeric'
+    });
+
+    // Theme
+    applyTheme(currentTheme);
+    applyLang(currentLang);
+
+    // Check session
+    if(sessionStorage.getItem('smartqr_auth') === 'true') {
+      document.getElementById('lockScreen').style.display = 'none';
+      document.getElementById('mainDashboard').classList.remove('hidden-panel');
+      loadDashboard();
+    }
+  });
+
+  // ---- THEME ----
+  function toggleTheme() {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('smartqr_theme', currentTheme);
+    applyTheme(currentTheme);
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('themeIcon').textContent = theme === 'dark' ? '🌙' : '☀️';
+  }
+
+  // ---- LANGUE ----
+  function toggleLang() {
+    const langs = ['fr', 'en', 'ar'];
+    const idx = langs.indexOf(currentLang);
+    currentLang = langs[(idx + 1) % langs.length];
+    localStorage.setItem('smartqr_lang', currentLang);
+    applyLang(currentLang);
+  }
+
+  function applyLang(lang) {
+    const d = DICT[lang] || DICT.fr;
+    document.getElementById('langLabel').textContent = lang.toUpperCase();
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
+
+    // Auth
+    document.getElementById('loginTitle').textContent = d.loginTitle;
+    document.getElementById('loginSub').textContent = d.loginSub;
+    document.getElementById('loginBtn').textContent = d.loginBtn;
+
+    // Dashboard
+    document.getElementById('menuTitle').textContent = d.menuTitle;
+    document.getElementById('formTitle').textContent = d.formTitle;
+    document.getElementById('fNomLabel').textContent = d.fNomLabel;
+    document.getElementById('fDescLabel').textContent = d.fDescLabel;
+    document.getElementById('fCatLabel').textContent = d.fCatLabel;
+    document.getElementById('fPrixLabel').textContent = d.fPrixLabel;
+    document.getElementById('fDispoLabel').textContent = d.fDispoLabel;
+    document.getElementById('fImageLabel').textContent = d.fImageLabel;
+    document.getElementById('submitBtn').textContent = d.submitBtn;
+    document.getElementById('deleteBtn').textContent = d.deleteBtn;
+    document.getElementById('qrTitle').textContent = d.qrTitle;
+    document.getElementById('urlLabel').textContent = d.urlLabel;
+    document.getElementById('kpi1Label').textContent = d.kpi1;
+    document.getElementById('kpi2Label').textContent = d.kpi2;
+    document.getElementById('kpi3Label').textContent = d.kpi3;
+
+    // Re-render menu if visible
+    if (menuData.length > 0) renderMenuTable(menuData);
+  }
+
+  function t(key) {
+    return DICT[currentLang]?.[key] || DICT.fr[key] || key;
+  }
+
+  // ---- AUTH ----
+  function verifyLogin() {
+    const u = document.getElementById('userIn').value.trim();
+    const p = document.getElementById('passIn').value.trim();
+    
+    if(u === 'admin' && p === 'admin') {
+      sessionStorage.setItem('smartqr_auth', 'true');
+      document.getElementById('lockScreen').style.display = 'none';
+      document.getElementById('mainDashboard').classList.remove('hidden-panel');
+      showToast('✅ Connexion réussie');
+      loadDashboard();
+    } else {
+      showToast('❌ Identifiants incorrects', true);
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem('smartqr_auth');
+    document.getElementById('lockScreen').style.display = 'block';
+    document.getElementById('mainDashboard').classList.add('hidden-panel');
+    showToast('🔒 Déconnecté');
+  }
+
+  // ---- FILE ----
+  let base64String = "";
+
+  function processFile() {
+    const file = document.getElementById('pFile').files[0];
+    if (!file) return;
+    
+    if(file.size > 2 * 1024 * 1024) {
+      showToast('⚠️ L\'image est trop volumineuse (max 2Mo)', true);
+      document.getElementById('pFile').value = '';
+      return;
+    }
+
+    const r = new FileReader();
+    r.onloadend = function() {
+      base64String = r.result;
+      const view = document.getElementById('imgView');
+      view.src = r.result;
+      view.style.display = 'block';
+    };
+    r.readAsDataURL(file);
+  }
+
+  // ---- FORM ----
+  function resetForm() {
+    document.getElementById('dishForm').reset();
+    document.getElementById('editId').value = '';
+    document.getElementById('imgView').style.display = 'none';
+    document.getElementById('imgView').src = '';
+    base64String = '';
+    editMode = false;
+    document.getElementById('formTitle').textContent = t('formTitle');
+    document.getElementById('deleteBtn').style.display = 'none';
+    document.getElementById('submitBtn').textContent = t('submitBtn');
+  }
+
+  function fillForm(produit) {
+    document.getElementById('editId').value = produit.id;
+    document.getElementById('pNom').value = produit.nom || '';
+    document.getElementById('pDesc').value = produit.description || '';
+    document.getElementById('pCat').value = produit.categorieId || '';
+    document.getElementById('pPrix').value = produit.prix || '';
+    document.getElementById('pDispo').value = produit.disponible ? 'true' : 'false';
+    if (produit.image) {
+      document.getElementById('imgView').src = produit.image;
+      document.getElementById('imgView').style.display = 'block';
+      base64String = produit.image;
+    }
+    editMode = true;
+    document.getElementById('formTitle').textContent = '✏️ ' + t('formTitle').replace('Ajouter', 'Modifier');
+    document.getElementById('deleteBtn').style.display = 'inline-block';
+    document.getElementById('submitBtn').textContent = '💾 ' + t('submitBtn');
+  }
+
+  // ---- UPLOAD ----
+  async function uploadPlat(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳...';
+
+    const nom = document.getElementById('pNom').value.trim();
+    const desc = document.getElementById('pDesc').value.trim();
+    const cat = document.getElementById('pCat').value.trim();
+    const prix = Number(document.getElementById('pPrix').value);
+    const dispo = document.getElementById('pDispo').value === 'true';
+    const editId = document.getElementById('editId').value;
+
+    if (!nom || !desc || !cat || !prix) {
+      showToast(t('toastEmpty'), true);
+      btn.disabled = false;
+      btn.textContent = t('submitBtn');
+      return;
+    }
+
+    const payload = {
+      ID: editId || "PROD_" + new Date().getTime(),
+      Nom: nom,
+      Description: desc,
+      CategorieID: cat,
+      Prix: prix,
+      Image: base64String || '',
+      Disponible: dispo
+    };
+
+    try {
+      const res = await SmartQRApi.post('upsertProduit', { produit: payload });
+      if(res.ok) {
+        showToast(t('toastSaved'));
+        resetForm();
+        loadDashboard();
+        refreshMenu();
+      } else {
+        showToast(t('toastError') + (res.error || 'Inconnue'), true);
+      }
+    } catch(err) {
+      showToast(t('toastError') + err.message, true);
+    }
+    btn.disabled = false;
+    btn.textContent = t('submitBtn');
+  }
+
+  // ---- DELETE ----
+  async function deleteProduit() {
+    const id = document.getElementById('editId').value;
+    if (!id) return;
+    if (!confirm(t('confirmDelete'))) return;
+
+    try {
+      const res = await SmartQRApi.post('deleteProduit', { produitId: id });
+      if(res.ok) {
+        showToast(t('toastDeleted'));
+        resetForm();
+        loadDashboard();
+        refreshMenu();
+      } else {
+        showToast(t('toastError') + (res.error || 'Inconnue'), true);
+      }
+    } catch(err) {
+      showToast(t('toastError') + err.message, true);
+    }
+  }
+
+  // ---- MENU LIST ----
+  async function refreshMenu() {
+    try {
+      const menu = await SmartQRApi.get('getMenu');
+      menuData = menu.flatMap(c => c.produits.map(p => ({ ...p, categorieNom: c.nom })));
+      renderMenuTable(menuData);
+    } catch(err) {
+      document.getElementById('menuListContainer').innerHTML = `
+        <div style="text-align:center;padding:20px;color:var(--brick);">
+          ❌ Erreur: ${err.message}
+        </div>
+      `;
+    }
+  }
+
+  function renderMenuTable(produits) {
+    const container = document.getElementById('menuListContainer');
+    if (!produits || produits.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:30px;color:var(--text-secondary);">
+          📭 Aucun plat dans le menu
+        </div>
+      `;
+      return;
+    }
+
+    const d = DICT[currentLang] || DICT.fr;
+    container.innerHTML = `
+      <table class="menu-table">
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th style="width:44px;">📷</th>
+            <th>Nom</th>
+            <th style="text-align:right;">Prix</th>
+            <th style="text-align:center;">Statut</th>
+            <th style="text-align:center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${produits.map((p, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td>
+                <img class="dish-img-sm" src="${p.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=50'}" 
+                     onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=50'">
+              </td>
+              <td>
+                <div style="font-weight:600;">${p.nom ? p.nom.split('|')[0].trim() : p.nom}</div>
+                <div style="font-size:11px;color:var(--text-secondary);">${p.categorieNom ? p.categorieNom.split('|')[0].trim() : ''}</div>
+              </td>
+              <td style="text-align:right;font-family:monospace;font-weight:700;">${p.prix} DA</td>
+              <td style="text-align:center;">
+                <span class="status-dot ${p.disponible !== false ? 'available' : 'unavailable'}"></span>
+                ${p.disponible !== false ? d.available : d.unavailable}
+              </td>
+              <td style="text-align:center;">
+                <div class="action-group">
+                  <button class="btn btn-sm" style="background:var(--saffron);color:var(--text-inverse);" onclick="editProduit('${p.id}')">✏️</button>
+                  <button class="btn btn-sm btn-danger" onclick="quickDelete('${p.id}')">🗑️</button>
+                  <button class="btn btn-sm" style="background:var(--border-color);" onclick="toggleDispo('${p.id}')">${p.disponible !== false ? '🔴' : '🟢'}</button>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // ---- PRODUIT ACTIONS ----
+  async function editProduit(id) {
+    try {
+      const produit = menuData.find(p => p.id === id);
+      if (produit) {
+        fillForm(produit);
+        // Scroll to form
+        document.querySelector('.panel-card .card-title').scrollIntoView({ behavior: 'smooth' });
+      }
+    } catch(err) {
+      showToast(t('toastError') + err.message, true);
+    }
+  }
+
+  async function quickDelete(id) {
+    if (!confirm(t('confirmDelete'))) return;
+    try {
+      const res = await SmartQRApi.post('deleteProduit', { produitId: id });
+      if(res.ok) {
+        showToast(t('toastDeleted'));
+        loadDashboard();
+        refreshMenu();
+        if (document.getElementById('editId').value === id) resetForm();
+      } else {
+        showToast(t('toastError') + (res.error || 'Inconnue'), true);
+      }
+    } catch(err) {
+      showToast(t('toastError') + err.message, true);
+    }
+  }
+
+  async function toggleDispo(id) {
+    try {
+      const produit = menuData.find(p => p.id === id);
+      if (!produit) return;
+      
+      const newDispo = produit.disponible === false;
+      const payload = {
+        ID: id,
+        Nom: produit.nom,
+        Description: produit.description || '',
+        CategorieID: produit.categorieId || '',
+        Prix: produit.prix || 0,
+        Image: produit.image || '',
+        Disponible: newDispo
+      };
+      
+      const res = await SmartQRApi.post('upsertProduit', { produit: payload });
+      if(res.ok) {
+        showToast(newDispo ? '🟢 Plat disponible' : '🔴 Plat épuisé');
+        loadDashboard();
+        refreshMenu();
+      }
+    } catch(err) {
+      showToast(t('toastError') + err.message, true);
+    }
+  }
+
+  // ---- DASHBOARD ----
+  async function loadDashboard() {
+    try {
+      const d = await SmartQRApi.get('getDashboard');
+      document.getElementById('kpi-ca').textContent = Number(d.ca || 0).toLocaleString('fr-FR') + ' DA';
+      document.getElementById('kpi-nb').textContent = d.nbCommandes || 0;
+      document.getElementById('kpi-panier').textContent = Number(d.panierMoyen || 0).toLocaleString('fr-FR') + ' DA';
+      document.getElementById('syncStatus').textContent = '🟢 Connecté';
+      document.getElementById('syncStatus').className = 'status-badge';
+      
+      // Refresh menu
+      await refreshMenu();
+      loadQRCodes();
+    } catch(err) {
+      document.getElementById('syncStatus').textContent = '🔴 Hors ligne';
+      document.getElementById('syncStatus').className = 'status-badge offline';
+      showToast('⚠️ Impossible de charger les données', true);
+    }
+  }
+
+  // ---- QR CODES ----
+  async function loadQRCodes() {
+    const container = document.getElementById('qrContainer');
+    container.innerHTML = '<div style="color:var(--text-secondary);text-align:center;padding:20px;grid-column:1/-1;">⏳ Génération...</div>';
+
+    try {
+      const tables = await SmartQRApi.get('getTables');
+      const base = document.getElementById('frontUrl').value.replace(/\/$/,'');
+      
+      if(!tables || tables.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-secondary);text-align:center;padding:20px;grid-column:1/-1;">Aucune table configurée</div>';
+        return;
+      }
+
+      container.innerHTML = tables.map(t => {
+        const url = `${base}/index.html?table=${encodeURIComponent(t.ID)}`;
+        const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+        return `<div class="qr-item">
+          <img src="${qrImg}" alt="QR ${t.Nom}" loading="lazy">
+          <span class="label">${t.Nom}</span>
+        </div>`;
+      }).join('');
+    } catch(err) {
+      container.innerHTML = '<div style="color:var(--brick);text-align:center;padding:20px;grid-column:1/-1;">❌ Erreur</div>';
+    }
+  }
+
+  // ---- TOAST ----
+  function showToast(msg, error = false) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.className = 'toast' + (error ? ' error' : '');
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => t.classList.remove('show'), 5000);
+  }
+
+  function closeToast() {
+    document.getElementById('toast').classList.remove('show');
+  }
+
+  // ---- AUTO REFRESH ----
+  let refreshInterval = setInterval(() => {
+    if (!document.getElementById('lockScreen').style.display === 'none') {
+      loadDashboard();
+    }
+  }, 30000);
+
+  window.addEventListener('beforeunload', () => clearInterval(refreshInterval));
+
+  // ---- LOAD ON START ----
+  if(sessionStorage.getItem('smartqr_auth') === 'true') {
+    setTimeout(loadDashboard, 300);
+  }
+</script>
+</body>
+</html>

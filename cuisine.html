@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Écran Cuisine — SmartQR Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700&family=IBM+Plex+Mono:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D0E10; --card: #18191D; --border: #262930;
+    --text: #E4E7EB; --text-soft: #88909B;
+    --primary: #E8A33D; --success: #4C8C4A; --warning: #E67E22;
+    --radius:12px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { 
+    background:var(--bg); color:var(--text); 
+    font-family:'Inter',sans-serif; padding:16px;
+    min-height:100vh;
+  }
+  
+  .header {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border);
+    flex-wrap:wrap; gap:8px;
+  }
+  .header h1 { font-family:'Fraunces',serif; font-size:22px; }
+  .header-controls { display:flex; align-items:center; gap:12px; }
+  .refresh-badge { 
+    font-family:'IBM Plex Mono',monospace; font-size:11px; 
+    color:var(--text-soft); background:var(--card); 
+    padding:4px 12px; border-radius:6px;
+  }
+  .refresh-btn {
+    background:var(--card); border:1px solid var(--border);
+    color:var(--text); padding:6px 14px; border-radius:6px;
+    cursor:pointer; font-size:12px; font-weight:600;
+    transition:0.2s;
+  }
+  .refresh-btn:hover { border-color:var(--primary); }
+
+  .kanban { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  
+  .column { 
+    background:rgba(24,25,29,0.5); border-radius:var(--radius);
+    padding:16px; border:1px solid var(--border); min-height:70vh;
+  }
+  .column h2 { 
+    font-size:15px; font-weight:700; margin-bottom:16px; 
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .count { 
+    background:var(--border); padding:2px 10px; border-radius:10px; 
+    font-size:12px; font-family:'IBM Plex Mono',monospace;
+  }
+
+  .order-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius); padding:14px; margin-bottom:12px;
+    transition:0.2s; animation: slideIn 0.3s ease;
+  }
+  .order-card:hover { border-color:rgba(232,163,61,0.3); }
+  
+  @keyframes slideIn {
+    from { opacity:0; transform:translateY(-8px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  .order-meta {
+    display:flex; justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace; font-size:12px;
+    color:var(--text-soft); margin-bottom:10px;
+  }
+  .order-table {
+    color:#fff; font-weight:700; font-size:13px;
+    background:rgba(232,103,61,0.15); padding:2px 8px; border-radius:4px;
+  }
+  .order-time { background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:4px; }
+  
+  .items-list { list-style:none; margin-bottom:12px; }
+  .items-list li { 
+    padding:4px 0; border-bottom:1px dashed rgba(255,255,255,0.05);
+    font-size:14px; display:flex; justify-content:space-between;
+  }
+  .qty { 
+    font-weight:700; color:var(--primary); 
+    font-family:'IBM Plex Mono',monospace; margin-right:6px;
+  }
+  
+  .notes { 
+    font-size:12px; color:#C1483D; 
+    background:rgba(193,72,61,0.1); padding:6px 10px;
+    border-radius:6px; margin-top:8px; font-style:italic;
+  }
+
+  .action-btn {
+    width:100%; border:none; padding:10px; border-radius:8px;
+    font-weight:700; font-size:13px; cursor:pointer;
+    transition:0.2s; color:#000;
+  }
+  .action-btn:active { transform:scale(0.97); }
+  .action-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .action-btn.prep { background:#3498db; color:#fff; }
+  .action-btn.ready { background:var(--success); color:#fff; }
+  .action-btn:hover:not(:disabled) { filter:brightness(1.1); }
+
+  .empty-state {
+    text-align:center; padding:40px 20px; color:var(--text-soft);
+    font-size:13px;
+  }
+  .empty-state .icon { font-size:32px; margin-bottom:8px; }
+
+  /* Sound notification dot */
+  .has-orders::after {
+    content: '●';
+    color:var(--primary);
+    animation: pulse 1.5s ease-in-out infinite;
+    margin-left:6px;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity:1; }
+    50% { opacity:0.2; }
+  }
+
+  @media (max-width:768px) {
+    .kanban { grid-template-columns:1fr; }
+    .header h1 { font-size:18px; }
+    body { padding:12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>👨‍🍳 Cuisine</h1>
+  <div class="header-controls">
+    <span class="refresh-badge" id="syncStatus">🔄 Synchro...</span>
+    <button class="refresh-btn" onclick="fetchKitchenOrders()">↻</button>
+  </div>
+</div>
+
+<div class="kanban">
+  <div class="column">
+    <h2>📥 À Préparer <span class="count" id="count-new">0</span></h2>
+    <div id="list-new"></div>
+  </div>
+  <div class="column">
+    <h2>🔥 En Cuisson <span class="count" id="count-prep">0</span></h2>
+    <div id="list-prep"></div>
+  </div>
+</div>
+
+<!-- Audio Notification -->
+<audio id="notifSound" preload="auto">
+  <source src="data:audio/wav;base64,U1RBQwAA..." type="audio/wav">
+</audio>
+
+<script src="config.js"></script>
+<script>
+  // ---- STATE ----
+  let previousCount = 0;
+  let soundEnabled = true;
+
+  // ---- HELPERS ----
+  function parseDishName(raw) {
+    if (!raw) return '';
+    return raw.split('|')[0].trim();
+  }
+
+  // ---- FETCH ORDERS ----
+  async function fetchKitchenOrders() {
+    const statusEl = document.getElementById('syncStatus');
+    statusEl.textContent = '🔄 Synchronisation...';
+
+    try {
+      const allOrders = await SmartQRApi.get('getOrders');
+      
+      const newOrders = allOrders.filter(o => o.statut === 'nouvelle');
+      const prepOrders = allOrders.filter(o => o.statut === 'en_preparation');
+
+      // Notification sonore si nouvelle commande
+      if (newOrders.length > previousCount && soundEnabled) {
+        playNotification();
+      }
+      previousCount = newOrders.length;
+
+      document.getElementById('count-new').textContent = newOrders.length;
+      document.getElementById('count-prep').textContent = prepOrders.length;
+
+      // Update title with count
+      const titleEl = document.querySelector('.header h1');
+      if (newOrders.length > 0) {
+        titleEl.innerHTML = `👨‍🍳 Cuisine <span style="color:var(--primary);font-size:14px;">(${newOrders.length} nouvelles)</span>`;
+      } else {
+        titleEl.innerHTML = '👨‍🍳 Cuisine';
+      }
+
+      renderColumn('list-new', newOrders, 'prep', '⚡ Commencer');
+      renderColumn('list-prep', prepOrders, 'ready', '✅ Prêt !');
+
+      statusEl.textContent = `⏳ ${new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}`;
+    } catch (err) {
+      statusEl.textContent = '⚠️ Erreur';
+      console.error('Fetch error:', err);
+    }
+  }
+
+  // ---- RENDER COLUMN ----
+  function renderColumn(containerId, orders, type, btnText) {
+    const container = document.getElementById(containerId);
+    
+    if (orders.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">✅</div>
+          Rien à faire ici
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = orders.map(o => `
+      <div class="order-card">
+        <div class="order-meta">
+          <span class="order-table">📍 ${o.tableId}</span>
+          <span class="order-time">${new Date(o.dateHeure).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</span>
+        </div>
+        <ul class="items-list">
+          ${o.items.map(i => `
+            <li>
+              <span><span class="qty">${i.qte}×</span> ${parseDishName(i.nom)}</span>
+            </li>
+          `).join('')}
+        </ul>
+        ${o.notes ? `<div class="notes">💡 ${o.notes}</div>` : ''}
+        <button class="action-btn ${type}" 
+                onclick="changeStatus('${o.id}', '${type === 'prep' ? 'en_preparation' : 'prete'}', this)">
+          ${btnText}
+        </button>
+      </div>
+    `).join('');
+  }
+
+  // ---- CHANGE STATUS ----
+  async function changeStatus(orderId, nextStatus, btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳...';
+
+    try {
+      const res = await SmartQRApi.post('updateOrderStatus', {
+        commandeId: orderId,
+        statut: nextStatus
+      });
+      
+      if (res.ok) {
+        fetchKitchenOrders();
+      } else {
+        alert('❌ ' + (res.error || 'Erreur'));
+        btn.disabled = false;
+      }
+    } catch (err) {
+      alert('❌ ' + err.message);
+      btn.disabled = false;
+    }
+  }
+
+  // ---- NOTIFICATION SONORE ----
+  function playNotification() {
+    try {
+      // Créer un bip avec l'API Audio
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 800;
+      osc.type = 'sine';
+      gain.gain.value = 0.15;
+      osc.start();
+      setTimeout(() => {
+        osc.frequency.value = 1000;
+        setTimeout(() => {
+          osc.stop();
+          ctx.close();
+        }, 150);
+      }, 150);
+    } catch (e) {
+      // Fallback: utiliser l'élément audio si disponible
+      try {
+        const audio = document.getElementById('notifSound');
+        if (audio) audio.play().catch(() => {});
+      } catch (e2) {}
+    }
+  }
+
+  // ---- AUTO-REFRESH ----
+  let refreshInterval = setInterval(fetchKitchenOrders, 10000);
+
+  // ---- INIT ----
+  fetchKitchenOrders();
+
+  // Notification de nouvelles commandes via WebSocket simulé
+  // On vérifie plus fréquemment les nouvelles commandes
+  setInterval(() => {
+    // Vérification silencieuse
+    SmartQRApi.get('getOrders')
+      .then(orders => {
+        const newCount = orders.filter(o => o.statut === 'nouvelle').length;
+        if (newCount > previousCount && soundEnabled) {
+          playNotification();
+        }
+        previousCount = newCount;
+      })
+      .catch(() => {});
+  }, 5000);
+
+  // Nettoyer les intervalles
+  window.addEventListener('beforeunload', () => {
+    clearInterval(refreshInterval);
+  });
+
+  // Toggle son (clic sur le titre)
+  document.querySelector('.header h1')?.addEventListener('dblclick', () => {
+    soundEnabled = !soundEnabled;
+    showToast(soundEnabled ? '🔊 Sons activés' : '🔇 Sons désactivés');
+  });
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = `
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+      background:var(--card); color:var(--text); padding:10px 20px;
+      border-radius:8px; border:1px solid var(--border);
+      font-size:13px; z-index:100; transition:0.3s;
+      opacity:0; pointer-events:none;
+    `;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.style.opacity = '1', 10);
+    setTimeout(() => {
+      t.style.opacity = '0';
+      setTimeout(() => t.remove(), 400);
+    }, 2000);
+  }
+</script>
+</body>
+</html>

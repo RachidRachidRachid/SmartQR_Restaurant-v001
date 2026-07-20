@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Caisse POS — SmartQR</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700&family=IBM+Plex+Mono:wght@600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:#F8F9FA; --card:#FFFFFF; --ink:#1F2937;
+    --border:#E5E7EB; --primary:#E8A33D; --basil:#4C8C4A;
+    --brick:#C1483D; --shadow:0 4px 16px rgba(0,0,0,0.06);
+    --radius:12px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { 
+    background:var(--paper); color:var(--ink); 
+    font-family:'Inter',sans-serif; padding:16px 20px;
+    min-height:100vh;
+  }
+
+  .pos-header {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:20px; flex-wrap:wrap; gap:8px;
+  }
+  .pos-header h1 { font-family:'Fraunces',serif; font-size:22px; }
+  .pos-header .stats { 
+    display:flex; gap:16px; font-size:13px; 
+    color:#6B7280; background:var(--card); padding:6px 16px;
+    border-radius:8px; border:1px solid var(--border);
+  }
+  .pos-header .stats span { font-weight:700; color:var(--ink); }
+
+  .pos-layout {
+    display:grid; grid-template-columns:1.3fr 1fr;
+    gap:20px; max-width:1200px; margin:0 auto;
+  }
+
+  .panel {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius); padding:20px;
+    box-shadow:var(--shadow);
+  }
+  .panel h2 { 
+    font-family:'Fraunces',serif; font-size:18px; 
+    margin-bottom:16px; display:flex; justify-content:space-between;
+    align-items:center;
+  }
+
+  .ticket-list { max-height:70vh; overflow-y:auto; }
+  .ticket-list::-webkit-scrollbar { width:4px; }
+  .ticket-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+  .ticket-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 14px; border:1px solid var(--border);
+    border-radius:10px; margin-bottom:8px; cursor:pointer;
+    transition:0.2s;
+  }
+  .ticket-row:hover { border-color:var(--primary); background:rgba(232,163,61,0.03); }
+  .ticket-row.active { 
+    border-color:var(--primary); 
+    background:rgba(232,163,61,0.08);
+    box-shadow:0 0 0 2px rgba(232,163,61,0.15);
+  }
+  .ticket-row .left { display:flex; align-items:center; gap:12px; }
+  .ticket-row .left .table { font-weight:700; font-size:15px; }
+  .ticket-row .left .time { font-size:12px; color:#6B7280; }
+  .ticket-row .right { display:flex; align-items:center; gap:12px; }
+  .ticket-row .right .amount { font-family:'IBM Plex Mono',monospace; font-weight:700; }
+
+  .badge {
+    padding:2px 10px; border-radius:6px; font-size:10px;
+    font-weight:700; font-family:'IBM Plex Mono',monospace;
+    text-transform:uppercase; letter-spacing:0.3px;
+  }
+  .badge-new { background:#E3F2FD; color:#1D88E5; }
+  .badge-prep { background:#FFF3E0; color:#EF6C00; }
+  .badge-ready { background:#E8F5E9; color:#2E7D32; }
+
+  .bill-area {
+    min-height:200px;
+  }
+  .bill-preview {
+    border-top:2px solid var(--ink); border-bottom:2px solid var(--ink);
+    padding:16px 0; margin:16px 0;
+    font-family:'IBM Plex Mono',monospace; font-size:14px;
+  }
+  .bill-line { display:flex; justify-content:space-between; margin-bottom:6px; }
+  .bill-total {
+    display:flex; justify-content:space-between; 
+    font-size:20px; font-weight:700; margin-top:14px;
+    padding-top:12px; border-top:2px solid var(--border);
+    color:var(--brick);
+  }
+
+  .btn-pay {
+    width:100%; background:var(--basil); color:#fff;
+    border:none; padding:14px; border-radius:10px;
+    font-size:15px; font-weight:700; cursor:pointer;
+    transition:0.2s;
+  }
+  .btn-pay:hover:not(:disabled) { filter:brightness(1.05); }
+  .btn-pay:active:not(:disabled) { transform:scale(0.98); }
+  .btn-pay:disabled { background:#9CA3AF; cursor:not-allowed; }
+
+  .empty-state { 
+    text-align:center; padding:40px 20px; 
+    color:#9CA3AF; font-size:14px;
+  }
+  .empty-state .icon { font-size:36px; margin-bottom:8px; }
+
+  .status-dot { 
+    display:inline-block; width:8px; height:8px; 
+    border-radius:50%; margin-right:6px;
+  }
+  .status-dot.new { background:#1D88E5; }
+  .status-dot.prep { background:#EF6C00; }
+  .status-dot.ready { background:#2E7D32; }
+
+  @media (max-width:768px) {
+    .pos-layout { grid-template-columns:1fr; }
+    .pos-header h1 { font-size:18px; }
+    .pos-header .stats { font-size:12px; padding:4px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="pos-header">
+  <h1>🏪 Caisse Comptoir</h1>
+  <div class="stats">
+    En attente: <span id="pendingCount">0</span>
+    | Total CA: <span id="totalCA">0 DA</span>
+  </div>
+</div>
+
+<div class="pos-layout">
+  <!-- Liste des tickets -->
+  <div class="panel">
+    <h2>📋 Commandes Actives <span id="ticketCount" style="font-size:14px;font-weight:400;">0</span></h2>
+    <div class="ticket-list" id="ticketsList">
+      <div class="empty-state">
+        <div class="icon">📭</div>
+        Aucune commande en cours
+      </div>
+    </div>
+  </div>
+
+  <!-- Facturation -->
+  <div class="panel">
+    <h2>🧾 Facture</h2>
+    <div class="bill-area" id="billZone">
+      <div class="empty-state">
+        <div class="icon">👆</div>
+        Sélectionnez une commande
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+  // ---- STATE ----
+  let activeOrders = [];
+  let selectedOrder = null;
+
+  // ---- HELPERS ----
+  function parseLoc(str) { return str ? str.split('|')[0].trim() : str; }
+
+  function getStatusInfo(status) {
+    const map = {
+      'nouvelle': { label: 'Nouveau', cls: 'new' },
+      'en_preparation': { label: 'Cuisine', cls: 'prep' },
+      'prete': { label: 'Prêt', cls: 'ready' }
+    };
+    return map[status] || { label: status, cls: '' };
+  }
+
+  // ---- LOAD DATA ----
+  async function loadPosData() {
+    try {
+      const res = await SmartQRApi.get('getOrders');
+      activeOrders = res.filter(o => 
+        o.statut !== 'servie' && o.statut !== 'annulee'
+      );
+      
+      // Trier par date (plus récent en premier)
+      activeOrders.sort((a, b) => new Date(b.dateHeure) - new Date(a.dateHeure));
+
+      renderTickets();
+      updateStats();
+
+      // Si un ordre était sélectionné, essayer de le retrouver
+      if (selectedOrder) {
+        const fresh = activeOrders.find(o => o.id === selectedOrder.id);
+        if (fresh) {
+          selectedOrder = fresh;
+          viewBill(fresh);
+        } else {
+          selectedOrder = null;
+          resetBillZone();
+        }
+      }
+
+      document.getElementById('ticketCount').textContent = activeOrders.length;
+    } catch (err) {
+      console.error('Load error:', err);
+      document.getElementById('ticketsList').innerHTML = `
+        <div class="empty-state">
+          <div class="icon">⚠️</div>
+          Erreur de chargement
+        </div>
+      `;
+    }
+  }
+
+  // ---- RENDER TICKETS ----
+  function renderTickets() {
+    const box = document.getElementById('ticketsList');
+    
+    if (activeOrders.length === 0) {
+      box.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">✅</div>
+          Toutes les commandes sont servies
+        </div>
+      `;
+      return;
+    }
+
+    box.innerHTML = activeOrders.map(o => {
+      const info = getStatusInfo(o.statut);
+      const isActive = selectedOrder?.id === o.id;
+      return `
+        <div class="ticket-row ${isActive ? 'active' : ''}" onclick="selectTicket('${o.id}')">
+          <div class="left">
+            <span class="table">📍 ${o.tableId}</span>
+            <span class="time">${new Date(o.dateHeure).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</span>
+          </div>
+          <div class="right">
+            <span class="amount">${Number(o.total || 0).toLocaleString()} DA</span>
+            <span class="badge badge-${info.cls}">
+              <span class="status-dot ${info.cls}"></span>${info.label}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ---- UPDATE STATS ----
+  function updateStats() {
+    document.getElementById('pendingCount').textContent = activeOrders.length;
+    const total = activeOrders.reduce((s, o) => s + (Number(o.total) || 0), 0);
+    document.getElementById('totalCA').textContent = total.toLocaleString() + ' DA';
+  }
+
+  // ---- SELECT TICKET ----
+  function selectTicket(id) {
+    selectedOrder = activeOrders.find(o => o.id === id);
+    if (selectedOrder) {
+      renderTickets();
+      viewBill(selectedOrder);
+    }
+  }
+
+  // ---- VIEW BILL ----
+  function viewBill(order) {
+    const zone = document.getElementById('billZone');
+    const total = Number(order.total) || 0;
+    
+    zone.innerHTML = `
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:#6B7280;margin-bottom:12px;">
+        <span><strong>N°</strong> ${order.id.slice(0,12)}</span>
+        <span><strong>Table</strong> ${order.tableId}</span>
+        <span><strong>${new Date(order.dateHeure).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</strong></span>
+      </div>
+      
+      <div class="bill-preview">
+        ${order.items.map(i => `
+          <div class="bill-line">
+            <span>${i.qte} × ${parseLoc(i.nom)}</span>
+            <span>${(i.qte * i.prixUnitaire).toLocaleString()} DA</span>
+          </div>
+        `).join('')}
+        <div class="bill-total">
+          <span>TOTAL</span>
+          <span>${total.toLocaleString()} DA</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+        <button class="btn-pay" style="background:#6B7280;" onclick="printBill('${order.id}')">🖨️ Imprimer</button>
+        <button class="btn-pay" onclick="processPayment('${order.id}', this)">💰 Encaisser</button>
+      </div>
+    `;
+  }
+
+  // ---- RESET BILL ----
+  function resetBillZone() {
+    document.getElementById('billZone').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">👆</div>
+        Sélectionnez une commande
+      </div>
+    `;
+  }
+
+  // ---- PROCESS PAYMENT ----
+  async function processPayment(orderId, btn) {
+    if (!confirm('💰 Confirmer l\'encaissement de cette commande ?')) return;
+    
+    btn.disabled = true;
+    btn.textContent = '⏳ Validation...';
+
+    try {
+      const res = await SmartQRApi.post('updateOrderStatus', {
+        commandeId: orderId,
+        statut: 'servie'
+      });
+
+      if (res.ok) {
+        alert('✅ Paiement validé !');
+        selectedOrder = null;
+        await loadPosData();
+        resetBillZone();
+      } else {
+        alert('❌ ' + (res.error || 'Erreur'));
+        btn.disabled = false;
+      }
+    } catch (err) {
+      alert('❌ ' + err.message);
+      btn.disabled = false;
+    }
+  }
+
+  // ---- PRINT BILL (simulation) ----
+  function printBill(orderId) {
+    const order = activeOrders.find(o => o.id === orderId);
+    if (!order) return;
+
+    // Créer une facture imprimable
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    printWindow.document.write(`
+      <html><head><title>Facture ${orderId}</title>
+      <style>
+        body { font-family: monospace; padding: 20px; max-width: 300px; margin: 0 auto; }
+        h2 { text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; }
+        .line { display: flex; justify-content: space-between; padding: 4px 0; }
+        .total { font-size: 18px; font-weight: bold; border-top: 2px solid #000; padding-top: 8px; margin-top: 8px; }
+        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+      </style>
+      </head><body>
+      <h2>🧾 FACTURE</h2>
+      <p><strong>Table:</strong> ${order.tableId}</p>
+      <p><strong>Date:</strong> ${new Date(order.dateHeure).toLocaleString('fr-FR')}</p>
+      <hr>
+      ${order.items.map(i => `
+        <div class="line">
+          <span>${i.qte}× ${parseLoc(i.nom)}</span>
+          <span>${(i.qte * i.prixUnitaire).toLocaleString()} DA</span>
+        </div>
+      `).join('')}
+      <div class="total line">
+        <span>TOTAL</span>
+        <span>${Number(order.total).toLocaleString()} DA</span>
+      </div>
+      <div class="footer">Merci de votre visite !<br>Le Jardin d'Akid Lotfi</div>
+      <script>window.print(); window.close();<\/script>
+      </body></html>
+    `);
+    printWindow.document.close();
+  }
+
+  // ---- AUTO REFRESH ----
+  let refreshInterval = setInterval(loadPosData, 15000);
+
+  // ---- INIT ----
+  loadPosData();
+
+  window.addEventListener('beforeunload', () => {
+    clearInterval(refreshInterval);
+  });
+</script>
+</body>
+</html>
