@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-<title>Le Jardin d'Akid Lotfi</title>
+<title>SmartQR Menu</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Fraunces:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --paper:#FAF7F2; --card:#FFFFFF; --ink:#1F1B16; --ink-soft:#6b6459;
     --saffron:#E8A33D; --basil:#4C8C4A; --brick:#C1483D; --line:#E7E0D4;
-    --shadow:0 4px 20px rgba(0,0,0,0.06);
-    --radius:16px;
+    --shadow:0 4px 20px rgba(0,0,0,0.06); --radius:16px;
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { 
@@ -20,7 +19,6 @@
   }
   body.rtl { direction:rtl; text-align:right; }
   
-  /* Top Bar */
   .top-bar { 
     position:sticky; top:0; z-index:50; 
     background:rgba(250,247,242,0.95); backdrop-filter:blur(12px);
@@ -41,7 +39,6 @@
   }
   .cart-badge { background:var(--saffron); color:var(--ink); border-radius:50%; padding:0 6px; font-size:11px; min-width:18px; text-align:center; }
 
-  /* Header */
   .hero { 
     width:100%; height:180px; background-size:cover; background-position:center; 
     position:relative; display:flex; align-items:flex-end;
@@ -60,7 +57,6 @@
     background:rgba(0,0,0,0.5); padding:4px 12px; border-radius:20px;
   }
 
-  /* Categories */
   .cats-scroll { 
     display:flex; gap:6px; overflow-x:auto; padding:10px 16px;
     background:var(--paper); position:sticky; top:48px; z-index:30;
@@ -74,18 +70,15 @@
     white-space:nowrap; transition:0.2s;
   }
   .cat-chip.active { background:var(--saffron); color:var(--ink); border-color:var(--saffron); }
-  .cat-chip:active { transform:scale(0.95); }
 
-  /* Menu */
   main { padding:0 16px; max-width:600px; margin:0 auto; }
   .section-title { font-family:'Fraunces',serif; font-size:20px; margin:20px 0 12px; display:flex; align-items:center; gap:8px; }
-  .section-title span { font-size:14px; color:var(--ink-soft); font-weight:400; }
-
+  
   .dish-card { 
     display:flex; gap:12px; background:var(--card); 
     border:1px solid var(--line); border-radius:var(--radius); 
     padding:12px; margin-bottom:10px; align-items:center;
-    transition:0.2s; cursor:pointer;
+    transition:0.2s;
   }
   .dish-card:active { transform:scale(0.98); }
   .dish-img { 
@@ -113,7 +106,6 @@
   }
   .add-btn:active { transform:scale(0.85); }
 
-  /* Footer */
   .footer { 
     background:var(--ink); color:var(--paper); padding:24px 16px; 
     text-align:center; margin-top:32px; border-radius:20px 20px 0 0;
@@ -122,11 +114,9 @@
   .footer-name { font-family:'Fraunces',serif; font-size:18px; display:block; }
   .footer-phone { font-size:13px; color:#88909B; margin-top:4px; }
 
-  /* Cart Overlay */
   .overlay { 
     position:fixed; inset:0; background:rgba(0,0,0,0.4); 
-    z-index:90; display:none; 
-    -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+    z-index:90; display:none; backdrop-filter:blur(4px);
   }
   .overlay.open { display:block; }
   
@@ -143,8 +133,6 @@
     display:flex; justify-content:space-between; padding:10px 0; 
     border-bottom:1px solid var(--line); align-items:center;
   }
-  .cart-item .item-name { font-size:14px; }
-  .cart-item .item-price { font-family:'IBM Plex Mono',monospace; font-weight:600; }
   .cart-total { 
     display:flex; justify-content:space-between; 
     padding:16px 0; font-size:18px; font-weight:700; 
@@ -156,23 +144,19 @@
     font-size:16px; font-weight:700; cursor:pointer;
     transition:0.2s;
   }
-  .cart-send:active { transform:scale(0.98); }
   .cart-send:disabled { background:#88909B; cursor:not-allowed; }
 
-  /* Toast */
   .toast {
     position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
     background:var(--ink); color:var(--paper); padding:12px 24px;
     border-radius:12px; font-size:14px; font-weight:600;
     box-shadow:0 8px 32px rgba(0,0,0,0.3); z-index:100;
-    opacity:0; transition:0.3s ease;
-    pointer-events:none;
+    opacity:0; transition:0.3s ease; pointer-events:none;
   }
   .toast.show { opacity:1; bottom:110px; }
   .toast.success { background:var(--basil); }
   .toast.error { background:var(--brick); }
 
-  /* Empty state */
   .empty-state { text-align:center; padding:40px 20px; color:var(--ink-soft); }
   .empty-state .icon { font-size:48px; margin-bottom:12px; }
 
@@ -180,13 +164,11 @@
     .hero { height:140px; }
     .hero-content h1 { font-size:18px; }
     .dish-img { width:60px; height:60px; }
-    .dish-details h4 { font-size:14px; }
   }
 </style>
 </head>
 <body>
 
-<!-- Top Bar -->
 <div class="top-bar">
   <div class="lang-group">
     <button class="lang-btn active" data-lang="fr" onclick="setLang('fr')">FR</button>
@@ -198,18 +180,15 @@
   </button>
 </div>
 
-<!-- Hero -->
 <div class="hero" id="hBanner">
   <div class="hero-content">
-    <h1 id="hTitle">Le Jardin d'Akid Lotfi</h1>
+    <h1 id="hTitle">SmartQR</h1>
     <span class="table-tag" id="tabBadge">📍 Table</span>
   </div>
 </div>
 
-<!-- Categories -->
 <div class="cats-scroll" id="cBar"></div>
 
-<!-- Menu -->
 <main id="menuContainer">
   <div class="empty-state">
     <div class="icon">🍽️</div>
@@ -217,19 +196,17 @@
   </div>
 </main>
 
-<!-- Footer -->
 <div class="footer">
   <img class="footer-logo" id="fLogo" src="" alt="">
-  <span class="footer-name" id="fName">Le Jardin d'Akid Lotfi</span>
+  <span class="footer-name" id="fName">SmartQR Restaurant</span>
   <span class="footer-phone" id="fPhone">📞 +213 5XX XX XX XX</span>
   <p style="font-size:10px; color:#6b6459; margin-top:8px;">✨ Commandez depuis votre table ✨</p>
 </div>
 
-<!-- Cart -->
 <div class="overlay" id="layer" onclick="closeCart()"></div>
 <div class="cart-sheet" id="cSheet">
   <div class="handle"></div>
-  <h3 id="cartTitle" style="margin-top:0;">Votre Panier</h3>
+  <h3 id="cartTitle">Votre Panier</h3>
   <div id="cLines"></div>
   <div class="cart-total">
     <span id="cartTotalLabel">Total</span>
@@ -238,53 +215,53 @@
   <button class="cart-send" id="cartSend" onclick="sendOrder()">🚀 Envoyer la commande</button>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script src="config.js"></script>
 <script>
   // ============================================================
-  // SMARTQR CLIENT - Version Améliorée
+  // SMARTQR CLIENT - VERSION CORRIGÉE
   // ============================================================
 
-  // ---- ÉTAT ----
   let menu = [];
   let cart = [];
   let lang = 'fr';
   let config = {};
-  const tableId = new URLSearchParams(location.search).get('table') || 'T1';
+  
+  // Récupérer le magasin depuis l'URL
+  const magasinId = new URLSearchParams(window.location.search).get('magasin') || 'default';
+  const tableId = new URLSearchParams(window.location.search).get('table') || 'T1';
+  
+  // Mettre à jour l'API
+  SmartQRApi.magasinId = magasinId;
 
-  // ---- DICTIONNAIRE ----
   const dict = {
-    fr: { 
-      title: 'Votre Panier', total: 'Total', send: '🚀 Envoyer la commande',
-      empty: 'Panier vide', added: 'Ajouté au panier', sent: 'Commande envoyée !'
-    },
-    en: { 
-      title: 'Your Cart', total: 'Total', send: '🚀 Send Order',
-      empty: 'Cart is empty', added: 'Added to cart', sent: 'Order sent!'
-    },
-    ar: { 
-      title: 'سلتك', total: 'المجموع', send: '🚀 أرسل الطلب',
-      empty: 'السلة فارغة', added: 'أضيف إلى السلة', sent: 'تم إرسال الطلب!'
-    }
+    fr: { title: 'Votre Panier', total: 'Total', send: '🚀 Envoyer la commande', empty: 'Panier vide', added: 'Ajouté au panier', sent: 'Commande envoyée !', noMenu: 'Aucun plat disponible' },
+    en: { title: 'Your Cart', total: 'Total', send: '🚀 Send Order', empty: 'Cart is empty', added: 'Added to cart', sent: 'Order sent!', noMenu: 'No dishes available' },
+    ar: { title: 'سلتك', total: 'المجموع', send: '🚀 أرسل الطلب', empty: 'السلة فارغة', added: 'أضيف إلى السلة', sent: 'تم إرسال الطلب!', noMenu: 'لا توجد أطباق متاحة' }
   };
 
-  // ---- INIT ----
   document.getElementById('tabBadge').textContent = '📍 ' + tableId;
 
   async function init() {
     try {
-      // Load config
       config = await SmartQRApi.cache.getConfig();
       if (config.HeaderImage) document.getElementById('hBanner').style.backgroundImage = `url('${config.HeaderImage}')`;
       if (config.FooterImage) document.getElementById('fLogo').src = config.FooterImage;
       if (config.ContactPhone) document.getElementById('fPhone').textContent = '📞 ' + config.ContactPhone;
 
-      // Load menu
       menu = await SmartQRApi.cache.getMenu();
       
-      // Set default language
+      if (!menu || menu.length === 0) {
+        document.getElementById('menuContainer').innerHTML = `
+          <div class="empty-state">
+            <div class="icon">📭</div>
+            <p>${dict[lang].noMenu}</p>
+          </div>
+        `;
+        return;
+      }
+      
       setLang('fr');
     } catch (err) {
       console.error('Init error:', err);
@@ -292,26 +269,23 @@
       document.getElementById('menuContainer').innerHTML = `
         <div class="empty-state">
           <div class="icon">⚠️</div>
-          <p>Impossible de charger le menu.<br>Vérifiez votre connexion.</p>
+          <p>Impossible de charger le menu.</p>
           <button onclick="init()" style="margin-top:12px;padding:8px 24px;border-radius:8px;border:1px solid var(--line);background:var(--card);cursor:pointer;">🔄 Réessayer</button>
         </div>
       `;
     }
   }
 
-  // ---- LANGUE ----
   function setLang(l) {
     lang = l;
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
     document.querySelector(`.lang-btn[data-lang="${l}"]`)?.classList.add('active');
     document.body.className = l === 'ar' ? 'rtl' : '';
 
-    // Header
     const welcome = config['WelcomeMsg_' + l] || config.NomRestaurant || '';
     document.getElementById('hTitle').textContent = parseLoc(welcome);
     document.getElementById('fName').textContent = parseLoc(config.NomRestaurant || '');
 
-    // Cart
     document.getElementById('cartTitle').textContent = dict[l].title;
     document.getElementById('cartTotalLabel').textContent = dict[l].total;
     document.getElementById('cartSend').textContent = dict[l].send;
@@ -328,9 +302,7 @@
     return parts[0] || str;
   }
 
-  // ---- RENDER MENU ----
   function renderMenu() {
-    // Categories
     const cBar = document.getElementById('cBar');
     cBar.innerHTML = menu.map((c, i) => `
       <div class="cat-chip ${i === 0 ? 'active' : ''}" 
@@ -339,13 +311,12 @@
       </div>
     `).join('');
 
-    // Dishes
     const container = document.getElementById('menuContainer');
     if (!menu || menu.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="icon">📋</div>
-          <p>Aucun plat disponible</p>
+          <div class="icon">📭</div>
+          <p>${dict[lang].noMenu}</p>
         </div>
       `;
       return;
@@ -384,7 +355,6 @@
     `;
   }
 
-  // ---- CART OPERATIONS ----
   function findProduct(id) {
     for (const c of menu) {
       const p = c.produits.find(x => x.id === id);
@@ -418,16 +388,13 @@
   }
 
   function syncCart() {
-    // Update badge
     document.getElementById('countBad').textContent = cart.reduce((s, i) => s + i.qte, 0);
     
-    // Update dish cards
     menu.forEach(c => c.produits.forEach(p => {
       const el = document.getElementById('box-' + p.id);
       if (el) el.innerHTML = renderQty(p);
     }));
     
-    // Update cart sheet if open
     if (document.getElementById('cSheet').classList.contains('open')) {
       updateCartSheet();
     }
@@ -453,7 +420,6 @@
     document.getElementById('cartSend').disabled = false;
   }
 
-  // ---- CART UI ----
   function openCart() {
     if (cart.length === 0) {
       showToast('🛒 ' + dict[lang].empty, 'error');
@@ -469,7 +435,6 @@
     document.getElementById('cSheet').classList.remove('open');
   }
 
-  // ---- SEND ORDER ----
   async function sendOrder() {
     if (cart.length === 0) {
       showToast('🛒 ' + dict[lang].empty, 'error');
@@ -489,7 +454,7 @@
           prix: i.prix,
           qte: i.qte
         })),
-        notes: 'Langue: ' + lang
+        notes: 'Langue: ' + lang + ', Magasin: ' + magasinId
       });
 
       if (res.ok) {
@@ -508,7 +473,6 @@
     btn.textContent = dict[lang].send;
   }
 
-  // ---- TOAST ----
   function showToast(msg, type = '') {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -520,13 +484,11 @@
   // ---- START ----
   init();
 
-  // Auto-refresh menu toutes les 5 minutes
   setInterval(() => {
     SmartQRApi.cache.clear();
     init();
   }, 300000);
 
-  // Fermer le panier avec Escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeCart();
   });
