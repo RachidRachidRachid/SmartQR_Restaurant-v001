@@ -6,7 +6,6 @@
 <title>SmartQR Admin — Dashboard Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
-  /* ===== THEMES ===== */
   :root {
     --bg:#0D0E10; --panel:#18191D; --paper:#F8F7F4; --ink:#1A1A1A;
     --saffron:#E8A33D; --basil:#4C8C4A; --brick:#C1483D; --line:#2A2D32;
@@ -49,21 +48,29 @@
     display:flex; align-items:center; gap:12px; flex-wrap:wrap;
   }
   
-  .theme-toggle, .lang-toggle, .magasin-selector {
+  .magasin-selector {
+    background:var(--panel); border:1px solid var(--border-color);
+    border-radius:10px; padding:8px 14px;
+    color:var(--text-primary); font-size:14px; font-weight:600;
+    display:flex; align-items:center; gap:6px;
+  }
+  .magasin-selector select {
+    background:transparent; border:none; color:var(--text-primary);
+    font-weight:600; font-size:14px; outline:none; cursor:pointer;
+    max-width:200px;
+  }
+  .magasin-selector select option {
+    background:var(--panel); color:var(--text-primary);
+  }
+
+  .theme-toggle, .lang-toggle {
     background:var(--panel); border:1px solid var(--border-color);
     border-radius:10px; padding:8px 14px; cursor:pointer;
     color:var(--text-primary); font-size:14px; font-weight:600;
     transition:0.2s; display:flex; align-items:center; gap:6px;
   }
-  .theme-toggle:hover, .lang-toggle:hover, .magasin-selector:hover {
+  .theme-toggle:hover, .lang-toggle:hover {
     border-color:var(--saffron);
-  }
-  .magasin-selector select {
-    background:transparent; border:none; color:var(--text-primary);
-    font-weight:600; font-size:14px; outline:none; cursor:pointer;
-  }
-  .magasin-selector select option {
-    background:var(--panel); color:var(--text-primary);
   }
 
   .sub { 
@@ -205,6 +212,7 @@
   .qr-item:hover { border-color:var(--saffron); transform:translateY(-2px); }
   .qr-item img { width:100%; max-width:80px; border-radius:6px; }
   .qr-item .label { font-size:11px; font-weight:600; margin-top:4px; display:block; }
+  .qr-item .url-small { font-size:8px; color:var(--text-secondary); word-break:break-all; }
 
   .toast {
     position:fixed; bottom:24px; right:24px; padding:14px 24px;
@@ -226,11 +234,12 @@
     .kpis { grid-template-columns:1fr 1fr; }
     .app-header h1 { font-size:22px; }
     .auth-box { margin:20px auto; padding:24px; }
+    .magasin-selector select { max-width:120px; font-size:12px; }
   }
   @media (max-width:480px) {
     .kpis { grid-template-columns:1fr; }
     .app-header { flex-direction:column; align-items:stretch; }
-    .header-controls { justify-content:center; }
+    .header-controls { justify-content:center; flex-wrap:wrap; }
   }
 </style>
 </head>
@@ -242,7 +251,7 @@
     <div class="magasin-selector">
       <span>🏪</span>
       <select id="magasinSelect" onchange="switchMagasin()">
-        <option value="default">Magasin Principal</option>
+        <option value="default">Restaurant Principal</option>
       </select>
     </div>
     <button class="theme-toggle" onclick="toggleTheme()">
@@ -357,7 +366,7 @@
       </div>
       <div class="form-group">
         <label id="urlLabel">URL de base</label>
-        <input class="input-field" id="frontUrl" value="https://votre-compte.github.io/smartqr/">
+        <input class="input-field" id="frontUrl" value="https://rachidrachidrachid.github.io/SmartQR_Restaurant-v001/">
         <button class="btn btn-sm" style="margin-top:8px;width:100%;" onclick="loadQRCodes()">📱 Générer les QR</button>
       </div>
       <div class="qr-grid" id="qrContainer">
@@ -383,6 +392,7 @@
   let currentMagasin = localStorage.getItem('smartqr_magasin') || 'default';
   let menuData = [];
   let magasins = [];
+  let base64String = "";
 
   // ---- DICTIONNAIRE ----
   const DICT = {
@@ -415,6 +425,7 @@
       toastError: '❌ Erreur: ',
       toastEmpty: 'Veuillez remplir tous les champs',
       toastNoMenu: '📭 Aucun plat dans le menu',
+      toastMagasinChanged: '🏪 Magasin changé: ',
     },
     en: {
       loginTitle: '🔐 Admin Access',
@@ -445,6 +456,7 @@
       toastError: '❌ Error: ',
       toastEmpty: 'Please fill all fields',
       toastNoMenu: '📭 No dishes in menu',
+      toastMagasinChanged: '🏪 Store changed: ',
     },
     ar: {
       loginTitle: '🔐 دخول المدير',
@@ -475,6 +487,7 @@
       toastError: '❌ خطأ: ',
       toastEmpty: 'يرجى ملء جميع الحقول',
       toastNoMenu: '📭 لا توجد أطباق في القائمة',
+      toastMagasinChanged: '🏪 تم تغيير المتجر: ',
     }
   };
 
@@ -540,8 +553,6 @@
     document.getElementById('kpi1Label').textContent = d.kpi1;
     document.getElementById('kpi2Label').textContent = d.kpi2;
     document.getElementById('kpi3Label').textContent = d.kpi3;
-
-    if (menuData.length > 0) renderMenuTable(menuData);
   }
 
   function t(key) {
@@ -582,7 +593,12 @@
         select.innerHTML = res.map(m => 
           `<option value="${m.ID}">${m.Nom}</option>`
         ).join('');
-        select.value = currentMagasin;
+        // Restaurer la sélection
+        if (currentMagasin) {
+          select.value = currentMagasin;
+        }
+        // Mettre à jour l'API
+        SmartQRApi.magasinId = currentMagasin;
       }
     } catch(err) {
       console.error('Erreur chargement magasins:', err);
@@ -593,17 +609,17 @@
     const select = document.getElementById('magasinSelect');
     currentMagasin = select.value;
     localStorage.setItem('smartqr_magasin', currentMagasin);
-    // Mettre à jour l'API
     SmartQRApi.magasinId = currentMagasin;
-    showToast(`🏪 Magasin changé: ${select.options[select.selectedIndex].text}`);
+    
+    const selectedText = select.options[select.selectedIndex].text;
+    showToast(t('toastMagasinChanged') + selectedText);
+    
+    // Recharger tout
     loadDashboard();
-    refreshMenu();
     loadQRCodes();
   }
 
   // ---- FILE ----
-  let base64String = "";
-
   function processFile() {
     const file = document.getElementById('pFile').files[0];
     if (!file) return;
@@ -691,7 +707,6 @@
         resetForm();
         await loadDashboard();
         await refreshMenu();
-        // Mettre à jour les QR
         loadQRCodes();
       } else {
         showToast(t('toastError') + (res.error || 'Inconnue'), true);
@@ -730,10 +745,8 @@
     container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">⏳ Chargement...</div>';
 
     try {
-      // Récupérer le menu avec le magasin actuel
       const menu = await SmartQRApi.get('getMenu');
       
-      // Extraire tous les produits avec leurs catégories
       menuData = [];
       menu.forEach(cat => {
         cat.produits.forEach(p => {
@@ -906,22 +919,22 @@
       const base = document.getElementById('frontUrl').value.replace(/\/$/,'');
       
       if(!tables || tables.length === 0) {
-        container.innerHTML = '<div style="color:var(--text-secondary);text-align:center;padding:20px;grid-column:1/-1;">Aucune table configurée</div>';
+        container.innerHTML = '<div style="color:var(--text-secondary);text-align:center;padding:20px;grid-column:1/-1;">Aucune table configurée pour ce magasin</div>';
         return;
       }
 
       container.innerHTML = tables.map(t => {
-        // Construire l'URL avec le magasin
+        // URL avec magasin et table
         const url = `${base}/index.html?magasin=${currentMagasin}&table=${encodeURIComponent(t.ID)}`;
         const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
         return `<div class="qr-item">
           <img src="${qrImg}" alt="QR ${t.Nom}" loading="lazy">
           <span class="label">${t.Nom}</span>
-          <span style="font-size:9px;color:var(--text-secondary);display:block;word-break:break-all;">${url}</span>
+          <span class="url-small">${url}</span>
         </div>`;
       }).join('');
 
-      showToast(`✅ ${tables.length} QR codes générés`);
+      showToast(`✅ ${tables.length} QR codes générés pour ${currentMagasin}`);
     } catch(err) {
       console.error('QR error:', err);
       container.innerHTML = `
