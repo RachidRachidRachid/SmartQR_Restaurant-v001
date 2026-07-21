@@ -1,20 +1,21 @@
 /**
  * ============================================================
- *  SmartQR — Configuration Client V2.1
+ *  SmartQR — Configuration Client V3
  *  Multi-Magasins Support
  * ============================================================
  */
 
 // 🔴 REMPLACER PAR VOTRE URL APPS SCRIPT
-const SMARTQR_API_URL = "https://script.google.com/macros/s/AKfycbySYNeiTcDTg_WWFb0eMqsMfupOSoDzVBLxE54ZRwOsmx3HJlijjbhMPAd99QDe2q86/exec";
+const SMARTQR_API_URL = "https://script.google.com/macros/s/AKfycbwAvDI8vQAVRG53xiFZv1OwlaKFauWaW--fZPFtkKwelLMDPw5juYZI8k858DCotoMu/exec
+";
 
 // Détection du magasin depuis l'URL ou localStorage
 function getMagasinId() {
-  // 1. Vérifier l'URL
+  // 1. Vérifier l'URL (paramètre magasin ou store)
   const params = new URLSearchParams(window.location.search);
   const urlMagasin = params.get('magasin') || params.get('store');
   
-  // 2. Vérifier localStorage
+  // 2. Vérifier localStorage (pour l'admin)
   const storedMagasin = localStorage.getItem('smartqr_magasin');
   
   // 3. Priorité: URL > localStorage > default
@@ -79,6 +80,13 @@ const SmartQRApi = {
     } catch {
       return false;
     }
+  },
+
+  // Changer de magasin dynamiquement
+  setMagasin(magasinId) {
+    this.magasinId = magasinId;
+    localStorage.setItem('smartqr_magasin', magasinId);
+    this.cache.clear();
   },
 
   cache: {
