@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SmartQR • Gestion Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E8A33D;
+            --success: #2ECC71;
+            --danger: #E74C3C;
+            --warning: #F39C12;
+            --bg: #0A0A0F;
+            --bg-card: #14141C;
+            --bg-input: #1A1A24;
+            --text: #F0F0F5;
+            --text-secondary: #8A8AA0;
+            --text-muted: #5A5A70;
+            --border: #2A2A3A;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 8px 40px rgba(0,0,0,0.3);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        [data-theme="light"] {
+            --bg: #F5F3F0;
+            --bg-card: #FFFFFF;
+            --bg-input: #F0EDEA;
+            --text: #1A1A1A;
+            --text-secondary: #6B6459;
+            --text-muted: #A09888;
+            --border: #E5E0D8;
+            --shadow: 0 8px 40px rgba(0,0,0,0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 16px 20px 30px;
+            transition: background 0.4s ease;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid var(--border);
+        }
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+        }
+        .header h1 span { color: var(--primary); }
+
+        .btn {
+            padding: 8px 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+        .btn:hover { border-color: var(--primary); }
+        .btn-primary { background: var(--primary); color: var(--text-inverse); border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-sm { padding: 4px 12px; font-size: 11px; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+        }
+        .panel-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 17px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-wrap {
+            max-height: 60vh;
+            overflow-y: auto;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th {
+            background: var(--bg);
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 8px 12px;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        td {
+            padding: 6px 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        tr:hover td { background: rgba(232,163,61,0.04); }
+
+        .dish-img-sm {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            object-fit: cover;
+            background: var(--bg-input);
+        }
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+        .status-dot.available { background: var(--success); }
+        .status-dot.unavailable { background: var(--danger); }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .input-field {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: border var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+        .input-field:focus { border-color: var(--primary); }
+        .input-field::placeholder { color: var(--text-muted); }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .file-upload {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            position: relative;
+        }
+        .file-upload:hover { border-color: var(--primary); }
+        .file-upload input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-upload .hint { font-size: 13px; color: var(--text-secondary); }
+        .preview-img {
+            width: 100%;
+            max-height: 120px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            display: none;
+            margin-top: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .form-actions .btn { flex: 1; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-state .icon { font-size: 40px; margin-bottom: 8px; }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            font-weight: 600;
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .header h1 { font-size: 18px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .header { flex-direction: column; align-items: stretch; }
+            .header .controls { display: flex; flex-wrap: wrap; gap: 6px; }
+            .btn { padding: 6px 14px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1>📋 Gestion du <span>Menu</span></h1>
+        <div class="controls">
+            <select id="magasinSelect" class="input-field" style="width:auto;padding:6px 14px;font-size:13px;" onchange="switchMagasin()">
+                <option value="default">Restaurant Principal</option>
+            </select>
+            <button class="btn btn-primary" onclick="loadMenu()">🔄 Rafraîchir</button>
+            <button class="btn btn-success" onclick="resetForm()">➕ Nouveau</button>
+            <button class="btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+        </div>
+    </header>
+
+    <div class="grid-2">
+        <!-- LISTE -->
+        <div class="panel">
+            <div class="panel-title">
+                <span>📋 Liste des Plats</span>
+                <span id="countBadge" style="font-size:13px;font-weight:400;color:var(--text-secondary);">0</span>
+            </div>
+            <div class="table-wrap" id="menuList">
+                <div class="empty-state"><div class="icon">⏳</div><p>Chargement...</p></div>
+            </div>
+        </div>
+
+        <!-- FORMULAIRE -->
+        <div class="panel">
+            <div class="panel-title">
+                <span id="formTitle">🍲 Ajouter un Plat</span>
+                <button class="btn btn-sm" style="background:var(--border);" onclick="resetForm()">✖</button>
+            </div>
+            <form id="dishForm" onsubmit="saveDish(event)">
+                <input type="hidden" id="editId">
+
+                <div class="form-group">
+                    <label>Nom du Plat <span style="color:var(--text-muted);font-weight:400;">(FR | EN | AR)</span></label>
+                    <input type="text" id="pNom" class="input-field" placeholder="Ex: Salade César | Caesar Salad | سلطة سيزر" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" id="pDesc" class="input-field" placeholder="Ex: Poulet, parmesan..." required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Catégorie</label>
+                        <input type="text" id="pCat" class="input-field" placeholder="CAT1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Prix (DA)</label>
+                        <input type="number" id="pPrix" class="input-field" placeholder="1200" required min="0" step="10">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Disponibilité</label>
+                    <select id="pDispo" class="input-field">
+                        <option value="true">✅ Disponible</option>
+                        <option value="false">❌ Épuisé</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>📷 Image</label>
+                    <div class="file-upload">
+                        <span class="hint">📤 Cliquez pour télécharger une image</span>
+                        <input type="file" id="pFile" accept="image/*" onchange="processFile()">
+                    </div>
+                    <img id="imgView" class="preview-img" alt="Aperçu">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">💾 Enregistrer</button>
+                    <button type="button" class="btn btn-danger" id="deleteBtn" style="display:none;" onclick="deleteDish()">🗑️ Supprimer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="config.js"></script>
+    <script>
+        // ============================================================
+        // SMARTQR GESTION MENU - VERSION CERTIFIÉE PRO
+        // ============================================================
+
+        let currentTheme = localStorage.getItem('smartqr_theme') || 'dark';
+        let currentMagasin = localStorage.getItem('smartqr_magasin') || 'default';
+        let menuData = [];
+        let base64String = "";
+        let editMode = false;
+
+        applyTheme(currentTheme);
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('smartqr_theme', currentTheme);
+            applyTheme(currentTheme);
+        }
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            document.getElementById('themeBtn').textContent = theme === 'dark' ? '🌙' : '☀️';
+        }
+
+        async function loadMagasins() {
+            try {
+                const res = await SmartQRApi.get('getMagasins');
+                if (res && res.length > 0) {
+                    const select = document.getElementById('magasinSelect');
+                    select.innerHTML = res.map(m => `<option value="${m.ID}">${m.Nom}</option>`).join('');
+                    select.value = currentMagasin;
+                    SmartQRApi.magasinId = currentMagasin;
+                }
+            } catch(err) { console.error(err); }
+        }
+
+        function switchMagasin() {
+            const select = document.getElementById('magasinSelect');
+            currentMagasin = select.value;
+            localStorage.setItem('smartqr_magasin', currentMagasin);
+            SmartQRApi.magasinId = currentMagasin;
+            loadMenu();
+            showToast('🏪 Magasin changé');
+        }
+
+        function processFile() {
+            const file = document.getElementById('pFile').files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('⚠️ Image trop volumineuse (max 2Mo)', 'error');
+                document.getElementById('pFile').value = '';
+                return;
+            }
+            const r = new FileReader();
+            r.onloadend = function() {
+                base64String = r.result;
+                document.getElementById('imgView').src = r.result;
+                document.getElementById('imgView').style.display = 'block';
+            };
+            r.readAsDataURL(file);
+        }
+
+        function resetForm() {
+            document.getElementById('dishForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('imgView').style.display = 'none';
+            document.getElementById('imgView').src = '';
+            base64String = '';
+            editMode = false;
+            document.getElementById('formTitle').textContent = '🍲 Ajouter un Plat';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('submitBtn').textContent = '💾 Enregistrer';
+        }
+
+        function fillForm(p) {
+            document.getElementById('editId').value = p.id;
+            document.getElementById('pNom').value = p.nom || '';
+            document.getElementById('pDesc').value = p.description || '';
+            document.getElementById('pCat').value = p.categorieId || '';
+            document.getElementById('pPrix').value = p.prix || '';
+            document.getElementById('pDispo').value = p.disponible ? 'true' : 'false';
+            if (p.image) {
+                document.getElementById('imgView').src = p.image;
+                document.getElementById('imgView').style.display = 'block';
+                base64String = p.image;
+            }
+            editMode = true;
+            document.getElementById('formTitle').textContent = '✏️ Modifier le Plat';
+            document.getElementById('deleteBtn').style.display = 'inline-block';
+            document.getElementById('submitBtn').textContent = '💾 Mettre à jour';
+        }
+
+        async function saveDish(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳...';
+
+            const nom = document.getElementById('pNom').value.trim();
+            const desc = document.getElementById('pDesc').value.trim();
+            const cat = document.getElementById('pCat').value.trim();
+            const prix = Number(document.getElementById('pPrix').value);
+            const dispo = document.getElementById('pDispo').value === 'true';
+            const editId = document.getElementById('editId').value;
+
+            if (!nom || !desc || !cat || !prix) {
+                showToast('⚠️ Veuillez remplir tous les champs', 'error');
+                btn.disabled = false;
+                btn.textContent = editMode ? '💾 Mettre à jour' : '💾 Enregistrer';
+                return;
+            }
+
+            const payload = {
+                ID: editId || "P_" + new Date().getTime(),
+                Nom: nom,
+                Description: desc,
+                CategorieID: cat,
+                Prix: prix,
+                Image: base64String || '',
+                Disponible: dispo
+            };
+
+            try {
+                const res = await SmartQRApi.post('upsertProduit', { produit: payload });
+                if (res.ok) {
+                    showToast('✅ Plat ' + (editMode ? 'modifié' : 'ajouté') + ' avec succès !', 'success');
+                    resetForm();
+                    loadMenu();
+                } else {
+                    showToast('❌ ' + (res.error || 'Erreur'), 'error');
+                }
+            } catch (err) {
+                showToast('❌ ' + err.message, 'error');
+            }
+            btn.disabled = false;
+            btn.textContent = editMode ? '💾 Mettre à jour' : '💾 Enregistrer';
+        }
+
+        async function deleteDish() {
+            const id = document.getElementById('editId').value;
+            if (!id) return;
+            if (!confirm('Confirmer la suppression définitive de ce plat ?')) return;
+
+            try {
+                const res = await SmartQRApi.post('deleteProduit', { produitId: id });
+                if (res.ok) {
+                    showToast('🗑️ Plat supprimé', 'success');
+                    resetForm();
+                    loadMenu();
+                } else {
+                    showToast('❌ ' + (res.error || 'Erreur'), 'error');
+                }
+            } catch (err) {
+                showToast('❌ ' + err.message, 'error');
+            }
+        }
+
+        async function loadMenu() {
+            const container = document.getElementById('menuList');
+            container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>Chargement...</p></div>';
+
+            try {
+                const menu = await SmartQRApi.get('getMenu');
+                menuData = [];
+                menu.forEach(cat => {
+                    cat.produits.forEach(p => {
+                        menuData.push({ ...p, categorieId: cat.id, categorieNom: cat.nom });
+                    });
+                });
+
+                document.getElementById('countBadge').textContent = menuData.length;
+
+                if (menuData.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <p>Aucun plat dans le menu</p>
+                            <p style="font-size:12px;color:var(--text-muted);">Ajoutez un plat avec le formulaire</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table>
+                        <thead><tr>
+                            <th style="width:30px;">#</th>
+                            <th style="width:40px;">📷</th>
+                            <th>Nom</th>
+                            <th style="text-align:right;">Prix</th>
+                            <th style="text-align:center;">Statut</th>
+                            <th style="text-align:center;">Actions</th>
+                        </tr></thead>
+                        <tbody>
+                            ${menuData.map((p, i) => {
+                                const nom = p.nom ? p.nom.split('|')[0].trim() : p.nom;
+                                const cat = p.categorieNom ? p.categorieNom.split('|')[0].trim() : '';
+                                const avail = p.disponible !== false;
+                                return `<tr>
+                                    <td>${i+1}</td>
+                                    <td><img class="dish-img-sm" src="${p.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=50'}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=50'"></td>
+                                    <td><div style="font-weight:600;">${nom}</div><div style="font-size:11px;color:var(--text-secondary);">${cat}</div></td>
+                                    <td style="text-align:right;font-weight:700;">${p.prix} DA</td>
+                                    <td style="text-align:center;"><span class="status-dot ${avail?'available':'unavailable'}"></span>${avail ? 'Disponible' : 'Épuisé'}</td>
+                                    <td style="text-align:center;">
+                                        <button class="btn btn-sm" style="background:var(--primary);color:var(--text-inverse);" onclick="editDish('${p.id}')">✏️</button>
+                                        <button class="btn btn-sm btn-danger" onclick="quickDelete('${p.id}')">🗑️</button>
+                                        <button class="btn btn-sm" style="background:var(--border);" onclick="toggleDish('${p.id}')">${avail ? '🔴' : '🟢'}</button>
+                                    </td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">⚠️</div>
+                        <p>${err.message}</p>
+                        <button onclick="loadMenu()" style="margin-top:10px;padding:6px 20px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;">🔄 Réessayer</button>
+                    </div>
+                `;
+            }
+        }
+
+        function editDish(id) {
+            const p = menuData.find(x => x.id === id);
+            if (p) fillForm(p);
+        }
+
+        async function quickDelete(id) {
+            if (!confirm('Confirmer la suppression ?')) return;
+            try {
+                const res = await SmartQRApi.post('deleteProduit', { produitId: id });
+                if (res.ok) {
+                    showToast('🗑️ Supprimé', 'success');
+                    if (document.getElementById('editId').value === id) resetForm();
+                    loadMenu();
+                }
+            } catch (err) { showToast('❌ ' + err.message, 'error'); }
+        }
+
+        async function toggleDish(id) {
+            const p = menuData.find(x => x.id === id);
+            if (!p) return;
+            const newDispo = p.disponible === false;
+            try {
+                const res = await SmartQRApi.post('upsertProduit', {
+                    produit: {
+                        ID: id,
+                        Nom: p.nom,
+                        Description: p.description || '',
+                        CategorieID: p.categorieId || '',
+                        Prix: p.prix || 0,
+                        Image: p.image || '',
+                        Disponible: newDispo
+                    }
+                });
+                if (res.ok) {
+                    showToast(newDispo ? '🟢 Plat disponible' : '🔴 Plat épuisé', 'success');
+                    loadMenu();
+                }
+            } catch (err) { showToast('❌ ' + err.message, 'error'); }
+        }
+
+        function showToast(msg, type = '') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast' + (type ? ' ' + type : '');
+            setTimeout(() => t.classList.add('show'), 10);
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+        }
+
+        // ---- INIT ----
+        loadMagasins();
+        loadMenu();
+    </script>
+</body>
+</html>

@@ -1,976 +1,319 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SmartQR Admin — Dashboard Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg:#0D0E10; --panel:#18191D; --paper:#F8F7F4; --ink:#1A1A1A;
-    --saffron:#E8A33D; --basil:#4C8C4A; --brick:#C1483D; --line:#2A2D32;
-    --radius:16px; --shadow:0 8px 32px rgba(0,0,0,0.3);
-    --text-primary:#E8EDF2; --text-secondary:#88909B; --text-inverse:#1A1A1A;
-    --card-bg:#18191D; --border-color:#2A2D32;
-    --input-bg:#0D0E10; --input-border:#2A2D32;
-    --hover-bg:rgba(232,163,61,0.08);
-    --scrollbar:#2A2D32;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SmartQR • Administration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E8A33D;
+            --success: #2ECC71;
+            --danger: #E74C3C;
+            --warning: #F39C12;
+            --info: #3498DB;
+            --bg: #0A0A0F;
+            --bg-card: #14141C;
+            --text: #F0F0F5;
+            --text-secondary: #8A8AA0;
+            --text-muted: #5A5A70;
+            --border: #2A2A3A;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 8px 40px rgba(0,0,0,0.3);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        [data-theme="light"] {
+            --bg: #F5F3F0;
+            --bg-card: #FFFFFF;
+            --text: #1A1A1A;
+            --text-secondary: #6B6459;
+            --text-muted: #A09888;
+            --border: #E5E0D8;
+            --shadow: 0 8px 40px rgba(0,0,0,0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 16px 20px 30px;
+            transition: background 0.4s ease;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-  [data-theme="light"] {
-    --bg:#F5F3F0; --panel:#FFFFFF; --paper:#FAF7F2; --ink:#1A1A1A;
-    --line:#E5E0D8; --text-primary:#1A1A1A; --text-secondary:#6B6459;
-    --card-bg:#FFFFFF; --border-color:#E5E0D8;
-    --input-bg:#F5F3F0; --input-border:#D5D0C8;
-    --shadow:0 8px 32px rgba(0,0,0,0.08);
-    --hover-bg:rgba(232,163,61,0.12);
-    --scrollbar:#D5D0C8;
-  }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid var(--border);
+        }
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+        }
+        .header h1 span { color: var(--primary); }
 
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { 
-    margin:0; background:var(--bg); color:var(--text-primary);
-    font-family:'Inter',sans-serif; padding:24px 32px 60px;
-    min-height:100vh; transition:background 0.3s, color 0.3s;
-  }
-  
-  ::-webkit-scrollbar { width:4px; height:4px; }
-  ::-webkit-scrollbar-track { background:transparent; }
-  ::-webkit-scrollbar-thumb { background:var(--scrollbar); border-radius:4px; }
+        .btn {
+            padding: 6px 18px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        .btn:hover { border-color: var(--primary); }
+        .btn-primary { background: var(--primary); color: var(--text-inverse); border-color: var(--primary); }
 
-  .app-header {
-    display:flex; justify-content:space-between; align-items:center;
-    flex-wrap:wrap; gap:12px; margin-bottom:8px;
-  }
-  .app-header h1 { font-family:'Fraunces',serif; font-size:28px; }
-  
-  .header-controls {
-    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-  }
-  
-  .magasin-selector {
-    background:var(--panel); border:1px solid var(--border-color);
-    border-radius:10px; padding:8px 14px;
-    color:var(--text-primary); font-size:14px; font-weight:600;
-    display:flex; align-items:center; gap:6px;
-  }
-  .magasin-selector select {
-    background:transparent; border:none; color:var(--text-primary);
-    font-weight:600; font-size:14px; outline:none; cursor:pointer;
-    max-width:200px;
-  }
-  .magasin-selector select option {
-    background:var(--panel); color:var(--text-primary);
-  }
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .kpi {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            transition: all var(--transition);
+        }
+        .kpi:hover { border-color: var(--primary); }
+        .kpi .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .kpi .value {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-top: 4px;
+        }
+        .kpi .change {
+            font-size: 12px;
+            color: var(--success);
+            margin-top: 2px;
+        }
+        .kpi .change.down { color: var(--danger); }
 
-  .theme-toggle, .lang-toggle {
-    background:var(--panel); border:1px solid var(--border-color);
-    border-radius:10px; padding:8px 14px; cursor:pointer;
-    color:var(--text-primary); font-size:14px; font-weight:600;
-    transition:0.2s; display:flex; align-items:center; gap:6px;
-  }
-  .theme-toggle:hover, .lang-toggle:hover {
-    border-color:var(--saffron);
-  }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+        }
+        .panel-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 17px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-  .sub { 
-    color:var(--text-secondary); font-size:13px; 
-    margin-bottom:24px; display:flex; justify-content:space-between;
-    align-items:center; flex-wrap:wrap; gap:8px;
-  }
-  .status-badge { 
-    background:var(--basil); padding:4px 12px; border-radius:20px; 
-    font-size:11px; font-weight:600; color:#fff;
-  }
-  .status-badge.offline { background:var(--brick); }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .stat-item:last-child { border-bottom: none; }
+        .stat-item .label { color: var(--text-secondary); }
+        .stat-item .value { font-weight: 700; }
 
-  .auth-box { 
-    background:var(--panel); border:1px solid var(--saffron); 
-    border-radius:var(--radius); padding:32px;
-    max-width:420px; margin:40px auto; box-shadow:var(--shadow);
-    text-align:center;
-  }
-  .auth-box h3 { font-family:'Fraunces',serif; font-size:20px; margin-bottom:16px; }
-  .input-field { 
-    width:100%; padding:14px 16px; margin:8px 0; border-radius:10px;
-    border:1px solid var(--input-border); background:var(--input-bg);
-    color:var(--text-primary); font-size:15px; transition:0.2s;
-    outline:none;
-  }
-  .input-field:focus { border-color:var(--saffron); box-shadow:0 0 0 3px rgba(232,163,61,0.15); }
-  .input-field::placeholder { color:var(--text-secondary); opacity:0.6; }
-  
-  .btn { 
-    background:var(--saffron); color:var(--text-inverse); border:none;
-    border-radius:10px; padding:14px 24px; cursor:pointer;
-    font-weight:700; width:100%; font-size:15px; transition:0.2s;
-  }
-  .btn:hover { transform:scale(1.01); box-shadow:0 4px 16px rgba(232,163,61,0.3); }
-  .btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
-  .btn-danger { background:var(--brick); color:#fff; }
-  .btn-danger:hover { box-shadow:0 4px 16px rgba(193,72,61,0.3); }
-  .btn-success { background:var(--basil); color:#fff; }
-  .btn-success:hover { box-shadow:0 4px 16px rgba(76,140,74,0.3); }
-  .btn-sm { padding:6px 14px; width:auto; font-size:12px; }
+        .status-tag {
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .status-tag.new { background: var(--info); color: #fff; }
+        .status-tag.prep { background: var(--warning); color: #fff; }
+        .status-tag.ready { background: var(--success); color: #fff; }
 
-  .hidden-panel { display:none; }
-  
-  .kpis { 
-    display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); 
-    gap:16px; margin-bottom:28px;
-  }
-  .kpi { 
-    background:var(--panel); border:1px solid var(--border-color);
-    border-radius:var(--radius); padding:18px 22px;
-    transition:0.2s;
-  }
-  .kpi:hover { border-color:var(--saffron); }
-  .kpi .label { 
-    font-family:'IBM Plex Mono',monospace; font-size:11px; 
-    color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;
-  }
-  .kpi .value { 
-    font-family:'Fraunces',serif; font-size:30px; font-weight:700;
-    color:var(--saffron); margin-top:4px;
-  }
+        .empty-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-state .icon { font-size: 32px; }
 
-  .grid-3 { display:grid; grid-template-columns:1.2fr 1fr 0.8fr; gap:24px; margin-top:24px; }
-  
-  .panel-card { 
-    background:var(--panel); border:1px solid var(--border-color);
-    border-radius:var(--radius); padding:24px;
-    transition:0.2s;
-  }
-  .panel-card:hover { border-color:rgba(232,163,61,0.3); }
-  .panel-card .card-title {
-    font-family:'Fraunces',serif; font-size:18px;
-    margin-bottom:16px; display:flex; justify-content:space-between;
-    align-items:center;
-  }
-
-  .form-group { margin-bottom:14px; }
-  .form-group label { 
-    display:block; font-size:12px; color:var(--text-secondary);
-    margin-bottom:4px; font-weight:500; text-transform:uppercase;
-    letter-spacing:0.3px;
-  }
-  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-
-  .preview-img { 
-    width:100%; max-height:180px; object-fit:cover; border-radius:10px;
-    display:none; margin-top:10px; border:1px solid var(--border-color);
-  }
-  .file-upload { 
-    position:relative; padding:24px; border:2px dashed var(--border-color);
-    border-radius:10px; text-align:center; cursor:pointer; transition:0.2s;
-  }
-  .file-upload:hover { border-color:var(--saffron); }
-  .file-upload input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; }
-  .file-upload .hint { color:var(--text-secondary); font-size:13px; }
-
-  .menu-table-wrap {
-    max-height:500px; overflow-y:auto; border-radius:10px;
-    border:1px solid var(--border-color);
-  }
-  .menu-table {
-    width:100%; border-collapse:collapse; font-size:13px;
-  }
-  .menu-table th {
-    background:var(--bg); color:var(--text-secondary);
-    font-weight:600; text-align:left; padding:10px 12px;
-    position:sticky; top:0; z-index:2; font-size:11px;
-    text-transform:uppercase; letter-spacing:0.3px;
-  }
-  .menu-table td {
-    padding:10px 12px; border-bottom:1px solid var(--border-color);
-    vertical-align:middle;
-  }
-  .menu-table tr:hover td { background:var(--hover-bg); }
-  .menu-table .dish-img-sm {
-    width:36px; height:36px; border-radius:6px; object-fit:cover;
-    background:#eee;
-  }
-  .menu-table .status-dot {
-    display:inline-block; width:8px; height:8px; border-radius:50%;
-    margin-right:4px;
-  }
-  .menu-table .status-dot.available { background:var(--basil); }
-  .menu-table .status-dot.unavailable { background:var(--brick); }
-
-  .action-group { display:flex; gap:4px; flex-wrap:wrap; }
-  .action-group .btn-sm { padding:4px 10px; font-size:11px; }
-
-  .qr-grid { 
-    display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
-    gap:10px; max-height:300px; overflow-y:auto; padding-right:4px;
-  }
-  .qr-item {
-    background:var(--bg); padding:10px; text-align:center;
-    border-radius:10px; border:1px solid var(--border-color);
-    transition:0.2s;
-  }
-  .qr-item:hover { border-color:var(--saffron); transform:translateY(-2px); }
-  .qr-item img { width:100%; max-width:80px; border-radius:6px; }
-  .qr-item .label { font-size:11px; font-weight:600; margin-top:4px; display:block; }
-  .qr-item .url-small { font-size:8px; color:var(--text-secondary); word-break:break-all; }
-
-  .toast {
-    position:fixed; bottom:24px; right:24px; padding:14px 24px;
-    border-radius:12px; background:var(--basil); color:#fff;
-    font-weight:600; box-shadow:var(--shadow); z-index:1000;
-    transform:translateY(120px); opacity:0; transition:0.4s ease;
-    max-width:400px;
-  }
-  .toast.show { transform:translateY(0); opacity:1; }
-  .toast.error { background:var(--brick); }
-
-  @media (max-width:1024px) {
-    .grid-3 { grid-template-columns:1fr 1fr; }
-  }
-  @media (max-width:768px) {
-    body { padding:16px; }
-    .grid-3 { grid-template-columns:1fr; }
-    .form-row { grid-template-columns:1fr; }
-    .kpis { grid-template-columns:1fr 1fr; }
-    .app-header h1 { font-size:22px; }
-    .auth-box { margin:20px auto; padding:24px; }
-    .magasin-selector select { max-width:120px; font-size:12px; }
-  }
-  @media (max-width:480px) {
-    .kpis { grid-template-columns:1fr; }
-    .app-header { flex-direction:column; align-items:stretch; }
-    .header-controls { justify-content:center; flex-wrap:wrap; }
-  }
-</style>
+        @media (max-width: 768px) {
+            .kpis { grid-template-columns: 1fr 1fr; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .header h1 { font-size: 18px; }
+        }
+        @media (max-width: 480px) {
+            .kpis { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="app-header">
-  <h1>📊 SmartQR Restaurant</h1>
-  <div class="header-controls">
-    <div class="magasin-selector">
-      <span>🏪</span>
-      <select id="magasinSelect" onchange="switchMagasin()">
-        <option value="default">Restaurant Principal</option>
-      </select>
-    </div>
-    <button class="theme-toggle" onclick="toggleTheme()">
-      <span id="themeIcon">🌙</span>
-    </button>
-    <button class="lang-toggle" onclick="toggleLang()">
-      🌐 <span id="langLabel">FR</span>
-    </button>
-    <button class="lang-toggle" onclick="logout()" style="border-color:var(--brick);">
-      🚪
-    </button>
-  </div>
-</div>
-
-<div class="sub">
-  <span id="dateLabel"></span>
-  <span class="status-badge" id="syncStatus">🟢 Connecté</span>
-</div>
-
-<!-- AUTH -->
-<div class="auth-box" id="lockScreen">
-  <h3 id="loginTitle">🔐 Accès Administrateur</h3>
-  <p id="loginSub" style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Connectez-vous pour gérer votre restaurant</p>
-  <input type="text" id="userIn" class="input-field" placeholder="Identifiant" value="admin">
-  <input type="password" id="passIn" class="input-field" placeholder="Mot de passe" value="admin">
-  <button class="btn" onclick="verifyLogin()" id="loginBtn">Se connecter</button>
-</div>
-
-<!-- DASHBOARD -->
-<div id="mainDashboard" class="hidden-panel">
-
-  <div class="kpis">
-    <div class="kpi"><div class="label" id="kpi1Label">Chiffre d'Affaires</div><div class="value" id="kpi-ca">—</div></div>
-    <div class="kpi"><div class="label" id="kpi2Label">Commandes du jour</div><div class="value" id="kpi-nb">—</div></div>
-    <div class="kpi"><div class="label" id="kpi3Label">Panier Moyen</div><div class="value" id="kpi-panier">—</div></div>
-  </div>
-
-  <div class="grid-3">
-    
-    <!-- MENU LIST -->
-    <div class="panel-card">
-      <div class="card-title">
-        <span id="menuTitle">📋 Menu</span>
-        <button class="btn btn-sm btn-success" onclick="refreshMenu()">🔄 Rafraîchir</button>
-      </div>
-      <div class="menu-table-wrap" id="menuListContainer">
-        <div style="text-align:center;padding:30px;color:var(--text-secondary);">
-          ⏳ Chargement du menu...
+    <header class="header">
+        <h1>📊 Administration <span>SmartQR</span></h1>
+        <div>
+            <span id="syncStatus" style="font-size:12px;color:var(--text-secondary);margin-right:12px;">🟢 Connecté</span>
+            <button class="btn btn-primary" onclick="loadDashboard()">🔄 Rafraîchir</button>
+            <button class="btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
         </div>
-      </div>
+    </header>
+
+    <div class="kpis" id="kpis">
+        <div class="kpi">
+            <div class="label">Chiffre d'Affaires</div>
+            <div class="value" id="kpiCa">—</div>
+        </div>
+        <div class="kpi">
+            <div class="label">Commandes du jour</div>
+            <div class="value" id="kpiOrders">—</div>
+        </div>
+        <div class="kpi">
+            <div class="label">Panier Moyen</div>
+            <div class="value" id="kpiAvg">—</div>
+        </div>
+        <div class="kpi">
+            <div class="label">Total Commandes</div>
+            <div class="value" id="kpiTotal">—</div>
+        </div>
     </div>
 
-    <!-- FORMULAIRE -->
-    <div class="panel-card">
-      <div class="card-title">
-        <span id="formTitle">🍲 Ajouter un Plat</span>
-        <button class="btn btn-sm" style="background:var(--border-color);" onclick="resetForm()">✖</button>
-      </div>
-      <form id="dishForm" onsubmit="uploadPlat(event)">
-        <input type="hidden" id="editId" value="">
-        
-        <div class="form-group">
-          <label id="fNomLabel">Nom du Plat (Français | English | العربية)</label>
-          <input type="text" id="pNom" class="input-field" placeholder="Ex: Salade César | Caesar Salad | سلطة سيزر" required>
+    <div class="grid-2">
+        <div class="panel">
+            <div class="panel-title">
+                <span>📋 Commandes récentes</span>
+            </div>
+            <div id="recentOrders">
+                <div class="empty-state"><div class="icon">⏳</div><p>Chargement...</p></div>
+            </div>
         </div>
-        
-        <div class="form-group">
-          <label id="fDescLabel">Description</label>
-          <input type="text" id="pDesc" class="input-field" placeholder="Ex: Poulet, parmesan..." required>
+
+        <div class="panel">
+            <div class="panel-title">
+                <span>📊 Statistiques par statut</span>
+            </div>
+            <div id="statusStats">
+                <div class="empty-state"><div class="icon">⏳</div><p>Chargement...</p></div>
+            </div>
         </div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label id="fCatLabel">Catégorie</label>
-            <input type="text" id="pCat" class="input-field" placeholder="CAT1" required>
-          </div>
-          <div class="form-group">
-            <label id="fPrixLabel">Prix (DA)</label>
-            <input type="number" id="pPrix" class="input-field" placeholder="1200" required min="0" step="10">
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label id="fDispoLabel">Disponibilité</label>
-          <select id="pDispo" class="input-field">
-            <option value="true">✅ Disponible</option>
-            <option value="false">❌ Épuisé</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label id="fImageLabel">📷 Image</label>
-          <div class="file-upload">
-            <span class="hint">📤 Cliquez pour télécharger</span>
-            <input type="file" id="pFile" accept="image/*" onchange="processFile()">
-          </div>
-          <img id="imgView" class="preview-img" alt="Aperçu">
-        </div>
-        
-        <div style="display:flex;gap:10px;">
-          <button type="submit" class="btn btn-success" id="submitBtn">💾 Enregistrer</button>
-          <button type="button" class="btn btn-danger" id="deleteBtn" style="display:none;width:auto;padding:14px 20px;" onclick="deleteProduit()">🗑️</button>
-        </div>
-      </form>
     </div>
 
-    <!-- QR CODES -->
-    <div class="panel-card">
-      <div class="card-title">
-        <span id="qrTitle">📍 Tables & QR</span>
-        <button class="btn btn-sm" style="background:var(--border-color);" onclick="loadQRCodes()">🔄</button>
-      </div>
-      <div class="form-group">
-        <label id="urlLabel">URL de base</label>
-        <input class="input-field" id="frontUrl" value="https://rachidrachidrachid.github.io/SmartQR_Restaurant-v001/">
-        <button class="btn btn-sm" style="margin-top:8px;width:100%;" onclick="loadQRCodes()">📱 Générer les QR</button>
-      </div>
-      <div class="qr-grid" id="qrContainer">
-        <div style="color:var(--text-secondary);text-align:center;padding:20px;grid-column:1/-1;">Chargement...</div>
-      </div>
+    <div style="margin-top:20px;text-align:center;font-size:12px;color:var(--text-muted);">
+        SmartQR Restaurant Suite V5 • © 2025
     </div>
-  </div>
-</div>
 
-<div class="toast" id="toast">
-  <span id="toastMsg"></span>
-</div>
+    <script src="config.js"></script>
+    <script>
+        // ============================================================
+        // SMARTQR ADMIN - VERSION CERTIFIÉE PRO
+        // ============================================================
 
-<script src="config.js"></script>
-<script>
-  // ============================================================
-  // SMARTQR ADMIN - VERSION CORRIGÉE
-  // ============================================================
+        let currentTheme = localStorage.getItem('smartqr_theme') || 'dark';
 
-  // ---- ÉTAT ----
-  let currentLang = localStorage.getItem('smartqr_lang') || 'fr';
-  let currentTheme = localStorage.getItem('smartqr_theme') || 'dark';
-  let currentMagasin = localStorage.getItem('smartqr_magasin') || 'default';
-  let menuData = [];
-  let magasins = [];
-  let base64String = "";
-
-  // ---- DICTIONNAIRE ----
-  const DICT = {
-    fr: {
-      loginTitle: '🔐 Accès Administrateur',
-      loginSub: 'Connectez-vous pour gérer votre restaurant',
-      loginBtn: 'Se connecter',
-      menuTitle: '📋 Menu',
-      formTitle: '🍲 Ajouter un Plat',
-      fNomLabel: 'Nom du Plat (Français | English | العربية)',
-      fDescLabel: 'Description (Français | English | العربية)',
-      fCatLabel: 'Catégorie',
-      fPrixLabel: 'Prix (DA)',
-      fDispoLabel: 'Disponibilité',
-      fImageLabel: '📷 Image',
-      submitBtn: '💾 Enregistrer',
-      deleteBtn: '🗑️ Supprimer',
-      qrTitle: '📍 Tables & QR',
-      urlLabel: 'URL de base',
-      kpi1: 'Chiffre d\'Affaires',
-      kpi2: 'Commandes du jour',
-      kpi3: 'Panier Moyen',
-      available: 'Disponible',
-      unavailable: 'Épuisé',
-      edit: 'Modifier',
-      delete: 'Supprimer',
-      confirmDelete: 'Confirmer la suppression de ce plat ?',
-      toastSaved: '✅ Plat enregistré avec succès !',
-      toastDeleted: '🗑️ Plat supprimé !',
-      toastError: '❌ Erreur: ',
-      toastEmpty: 'Veuillez remplir tous les champs',
-      toastNoMenu: '📭 Aucun plat dans le menu',
-      toastMagasinChanged: '🏪 Magasin changé: ',
-    },
-    en: {
-      loginTitle: '🔐 Admin Access',
-      loginSub: 'Login to manage your restaurant',
-      loginBtn: 'Sign in',
-      menuTitle: '📋 Menu',
-      formTitle: '🍲 Add Dish',
-      fNomLabel: 'Dish Name (French | English | العربية)',
-      fDescLabel: 'Description (French | English | العربية)',
-      fCatLabel: 'Category',
-      fPrixLabel: 'Price (DA)',
-      fDispoLabel: 'Availability',
-      fImageLabel: '📷 Image',
-      submitBtn: '💾 Save',
-      deleteBtn: '🗑️ Delete',
-      qrTitle: '📍 Tables & QR',
-      urlLabel: 'Base URL',
-      kpi1: 'Revenue',
-      kpi2: 'Orders Today',
-      kpi3: 'Average Cart',
-      available: 'Available',
-      unavailable: 'Out of Stock',
-      edit: 'Edit',
-      delete: 'Delete',
-      confirmDelete: 'Confirm deletion of this dish?',
-      toastSaved: '✅ Dish saved successfully!',
-      toastDeleted: '🗑️ Dish deleted!',
-      toastError: '❌ Error: ',
-      toastEmpty: 'Please fill all fields',
-      toastNoMenu: '📭 No dishes in menu',
-      toastMagasinChanged: '🏪 Store changed: ',
-    },
-    ar: {
-      loginTitle: '🔐 دخول المدير',
-      loginSub: 'سجل الدخول لإدارة مطعمك',
-      loginBtn: 'تسجيل الدخول',
-      menuTitle: '📋 القائمة',
-      formTitle: '🍲 إضافة طبق',
-      fNomLabel: 'اسم الطبق (Français | English | العربية)',
-      fDescLabel: 'الوصف (Français | English | العربية)',
-      fCatLabel: 'الفئة',
-      fPrixLabel: 'السعر (DA)',
-      fDispoLabel: 'التوفر',
-      fImageLabel: '📷 صورة',
-      submitBtn: '💾 حفظ',
-      deleteBtn: '🗑️ حذف',
-      qrTitle: '📍 الطاولات و QR',
-      urlLabel: 'الرابط الأساسي',
-      kpi1: 'الإيرادات',
-      kpi2: 'طلبات اليوم',
-      kpi3: 'متوسط السلة',
-      available: 'متوفر',
-      unavailable: 'نفد',
-      edit: 'تعديل',
-      delete: 'حذف',
-      confirmDelete: 'تأكيد حذف هذا الطبق؟',
-      toastSaved: '✅ تم حفظ الطبق بنجاح!',
-      toastDeleted: '🗑️ تم حذف الطبق!',
-      toastError: '❌ خطأ: ',
-      toastEmpty: 'يرجى ملء جميع الحقول',
-      toastNoMenu: '📭 لا توجد أطباق في القائمة',
-      toastMagasinChanged: '🏪 تم تغيير المتجر: ',
-    }
-  };
-
-  // ---- INIT ----
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('fr-FR', {
-      weekday:'long', year:'numeric', month:'long', day:'numeric'
-    });
-
-    applyTheme(currentTheme);
-    applyLang(currentLang);
-
-    if(sessionStorage.getItem('smartqr_auth') === 'true') {
-      document.getElementById('lockScreen').style.display = 'none';
-      document.getElementById('mainDashboard').classList.remove('hidden-panel');
-      loadMagasins();
-      loadDashboard();
-    }
-  });
-
-  // ---- THEME ----
-  function toggleTheme() {
-    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('smartqr_theme', currentTheme);
-    applyTheme(currentTheme);
-  }
-
-  function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    document.getElementById('themeIcon').textContent = theme === 'dark' ? '🌙' : '☀️';
-  }
-
-  // ---- LANGUE ----
-  function toggleLang() {
-    const langs = ['fr', 'en', 'ar'];
-    const idx = langs.indexOf(currentLang);
-    currentLang = langs[(idx + 1) % langs.length];
-    localStorage.setItem('smartqr_lang', currentLang);
-    applyLang(currentLang);
-  }
-
-  function applyLang(lang) {
-    const d = DICT[lang] || DICT.fr;
-    document.getElementById('langLabel').textContent = lang.toUpperCase();
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = lang;
-
-    document.getElementById('loginTitle').textContent = d.loginTitle;
-    document.getElementById('loginSub').textContent = d.loginSub;
-    document.getElementById('loginBtn').textContent = d.loginBtn;
-    document.getElementById('menuTitle').textContent = d.menuTitle;
-    document.getElementById('formTitle').textContent = d.formTitle;
-    document.getElementById('fNomLabel').textContent = d.fNomLabel;
-    document.getElementById('fDescLabel').textContent = d.fDescLabel;
-    document.getElementById('fCatLabel').textContent = d.fCatLabel;
-    document.getElementById('fPrixLabel').textContent = d.fPrixLabel;
-    document.getElementById('fDispoLabel').textContent = d.fDispoLabel;
-    document.getElementById('fImageLabel').textContent = d.fImageLabel;
-    document.getElementById('submitBtn').textContent = d.submitBtn;
-    document.getElementById('deleteBtn').textContent = d.deleteBtn;
-    document.getElementById('qrTitle').textContent = d.qrTitle;
-    document.getElementById('urlLabel').textContent = d.urlLabel;
-    document.getElementById('kpi1Label').textContent = d.kpi1;
-    document.getElementById('kpi2Label').textContent = d.kpi2;
-    document.getElementById('kpi3Label').textContent = d.kpi3;
-  }
-
-  function t(key) {
-    return DICT[currentLang]?.[key] || DICT.fr[key] || key;
-  }
-
-  // ---- AUTH ----
-  function verifyLogin() {
-    const u = document.getElementById('userIn').value.trim();
-    const p = document.getElementById('passIn').value.trim();
-    
-    if(u === 'admin' && p === 'admin') {
-      sessionStorage.setItem('smartqr_auth', 'true');
-      document.getElementById('lockScreen').style.display = 'none';
-      document.getElementById('mainDashboard').classList.remove('hidden-panel');
-      showToast('✅ Connexion réussie');
-      loadMagasins();
-      loadDashboard();
-    } else {
-      showToast('❌ Identifiants incorrects', true);
-    }
-  }
-
-  function logout() {
-    sessionStorage.removeItem('smartqr_auth');
-    document.getElementById('lockScreen').style.display = 'block';
-    document.getElementById('mainDashboard').classList.add('hidden-panel');
-    showToast('🔒 Déconnecté');
-  }
-
-  // ---- MAGASINS ----
-  async function loadMagasins() {
-    try {
-      const res = await SmartQRApi.get('getMagasins');
-      if (res && res.length > 0) {
-        magasins = res;
-        const select = document.getElementById('magasinSelect');
-        select.innerHTML = res.map(m => 
-          `<option value="${m.ID}">${m.Nom}</option>`
-        ).join('');
-        // Restaurer la sélection
-        if (currentMagasin) {
-          select.value = currentMagasin;
+        applyTheme(currentTheme);
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('smartqr_theme', currentTheme);
+            applyTheme(currentTheme);
         }
-        // Mettre à jour l'API
-        SmartQRApi.magasinId = currentMagasin;
-      }
-    } catch(err) {
-      console.error('Erreur chargement magasins:', err);
-    }
-  }
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            document.getElementById('themeBtn').textContent = theme === 'dark' ? '🌙' : '☀️';
+        }
 
-  function switchMagasin() {
-    const select = document.getElementById('magasinSelect');
-    currentMagasin = select.value;
-    localStorage.setItem('smartqr_magasin', currentMagasin);
-    SmartQRApi.magasinId = currentMagasin;
-    
-    const selectedText = select.options[select.selectedIndex].text;
-    showToast(t('toastMagasinChanged') + selectedText);
-    
-    // Recharger tout
-    loadDashboard();
-    loadQRCodes();
-  }
+        async function loadDashboard() {
+            const statusEl = document.getElementById('syncStatus');
+            statusEl.textContent = '🔄 Synchronisation...';
 
-  // ---- FILE ----
-  function processFile() {
-    const file = document.getElementById('pFile').files[0];
-    if (!file) return;
-    
-    if(file.size > 2 * 1024 * 1024) {
-      showToast('⚠️ L\'image est trop volumineuse (max 2Mo)', true);
-      document.getElementById('pFile').value = '';
-      return;
-    }
+            try {
+                // Dashboard stats
+                const stats = await SmartQRApi.get('getDashboard');
+                document.getElementById('kpiCa').textContent = (stats.ca || 0).toLocaleString() + ' DA';
+                document.getElementById('kpiOrders').textContent = stats.nbCommandes || 0;
+                document.getElementById('kpiAvg').textContent = (stats.panierMoyen || 0).toLocaleString() + ' DA';
+                document.getElementById('kpiTotal').textContent = stats.totalCommandes || 0;
 
-    const r = new FileReader();
-    r.onloadend = function() {
-      base64String = r.result;
-      const view = document.getElementById('imgView');
-      view.src = r.result;
-      view.style.display = 'block';
-    };
-    r.readAsDataURL(file);
-  }
+                // Recent orders
+                const orders = await SmartQRApi.get('getOrders');
+                const recent = orders.slice(0, 10);
+                const container = document.getElementById('recentOrders');
 
-  // ---- FORM ----
-  function resetForm() {
-    document.getElementById('dishForm').reset();
-    document.getElementById('editId').value = '';
-    document.getElementById('imgView').style.display = 'none';
-    document.getElementById('imgView').src = '';
-    base64String = '';
-    document.getElementById('formTitle').textContent = t('formTitle');
-    document.getElementById('deleteBtn').style.display = 'none';
-    document.getElementById('submitBtn').textContent = t('submitBtn');
-  }
+                if (recent.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>Aucune commande</p></div>`;
+                } else {
+                    const statusMap = { 'nouvelle': 'new', 'en_preparation': 'prep', 'prete': 'ready', 'servie': 'ready' };
+                    const statusLabel = { 'nouvelle': 'Reçu', 'en_preparation': 'Cuisine', 'prete': 'Prêt', 'servie': 'Servi' };
+                    container.innerHTML = recent.map(o => `
+                        <div class="stat-item">
+                            <span><strong>📍 ${o.tableId}</strong> <span style="color:var(--text-secondary);font-size:12px;">${new Date(o.dateHeure).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</span></span>
+                            <span>
+                                <span style="font-weight:700;margin-right:10px;">${(Number(o.total) || 0).toLocaleString()} DA</span>
+                                <span class="status-tag ${statusMap[o.statut] || 'new'}">${statusLabel[o.statut] || o.statut}</span>
+                            </span>
+                        </div>
+                    `).join('');
+                }
 
-  function fillForm(produit) {
-    document.getElementById('editId').value = produit.id;
-    document.getElementById('pNom').value = produit.nom || '';
-    document.getElementById('pDesc').value = produit.description || '';
-    document.getElementById('pCat').value = produit.categorieId || '';
-    document.getElementById('pPrix').value = produit.prix || '';
-    document.getElementById('pDispo').value = produit.disponible ? 'true' : 'false';
-    if (produit.image) {
-      document.getElementById('imgView').src = produit.image;
-      document.getElementById('imgView').style.display = 'block';
-      base64String = produit.image;
-    }
-    document.getElementById('formTitle').textContent = '✏️ ' + t('formTitle').replace('Ajouter', 'Modifier');
-    document.getElementById('deleteBtn').style.display = 'inline-block';
-    document.getElementById('submitBtn').textContent = '💾 ' + t('submitBtn');
-  }
+                // Status stats
+                const statusStats = document.getElementById('statusStats');
+                if (stats.parStatut) {
+                    const labels = { 'nouvelle': '📥 Nouvelles', 'en_preparation': '🔥 En cours', 'prete': '✅ Prêtes', 'servie': '📤 Servies', 'annulee': '🚫 Annulées' };
+                    const colors = { 'nouvelle': 'var(--info)', 'en_preparation': 'var(--warning)', 'prete': 'var(--success)', 'servie': 'var(--primary)', 'annulee': 'var(--danger)' };
+                    statusStats.innerHTML = Object.entries(stats.parStatut).map(([key, val]) => `
+                        <div class="stat-item">
+                            <span style="color:${colors[key] || 'var(--text)'}">${labels[key] || key}</span>
+                            <span class="value">${val}</span>
+                        </div>
+                    `).join('');
+                }
 
-  // ---- UPLOAD ----
-  async function uploadPlat(e) {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳...';
+                statusEl.textContent = '🟢 Connecté';
+            } catch (err) {
+                console.error('Dashboard error:', err);
+                statusEl.textContent = '🔴 Hors ligne';
+                showToast('❌ ' + err.message, 'error');
+            }
+        }
 
-    const nom = document.getElementById('pNom').value.trim();
-    const desc = document.getElementById('pDesc').value.trim();
-    const cat = document.getElementById('pCat').value.trim();
-    const prix = Number(document.getElementById('pPrix').value);
-    const dispo = document.getElementById('pDispo').value === 'true';
-    const editId = document.getElementById('editId').value;
+        function showToast(msg, type = '') {
+            const t = document.createElement('div');
+            t.style.cssText = `
+                position:fixed; bottom:20px; right:20px; padding:12px 24px;
+                border-radius:10px; background:var(--bg-card); color:var(--text);
+                border:1px solid var(--border); font-weight:600; z-index:999;
+                opacity:0; transform:translateY(20px); transition:all 0.3s ease;
+                box-shadow:var(--shadow);
+            `;
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.style.opacity = '1', 10);
+            if (type === 'error') t.style.borderColor = 'var(--danger)';
+            setTimeout(() => {
+                t.style.opacity = '0';
+                setTimeout(() => t.remove(), 400);
+            }, 3500);
+        }
 
-    if (!nom || !desc || !cat || !prix) {
-      showToast(t('toastEmpty'), true);
-      btn.disabled = false;
-      btn.textContent = t('submitBtn');
-      return;
-    }
-
-    const payload = {
-      ID: editId || "PROD_" + new Date().getTime(),
-      Nom: nom,
-      Description: desc,
-      CategorieID: cat,
-      Prix: prix,
-      Image: base64String || '',
-      Disponible: dispo
-    };
-
-    try {
-      const res = await SmartQRApi.post('upsertProduit', { produit: payload });
-      if(res.ok) {
-        showToast(t('toastSaved'));
-        resetForm();
-        await loadDashboard();
-        await refreshMenu();
-        loadQRCodes();
-      } else {
-        showToast(t('toastError') + (res.error || 'Inconnue'), true);
-      }
-    } catch(err) {
-      showToast(t('toastError') + err.message, true);
-    }
-    btn.disabled = false;
-    btn.textContent = t('submitBtn');
-  }
-
-  // ---- DELETE ----
-  async function deleteProduit() {
-    const id = document.getElementById('editId').value;
-    if (!id) return;
-    if (!confirm(t('confirmDelete'))) return;
-
-    try {
-      const res = await SmartQRApi.post('deleteProduit', { produitId: id });
-      if(res.ok) {
-        showToast(t('toastDeleted'));
-        resetForm();
-        await loadDashboard();
-        await refreshMenu();
-      } else {
-        showToast(t('toastError') + (res.error || 'Inconnue'), true);
-      }
-    } catch(err) {
-      showToast(t('toastError') + err.message, true);
-    }
-  }
-
-  // ---- MENU LIST ----
-  async function refreshMenu() {
-    const container = document.getElementById('menuListContainer');
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">⏳ Chargement...</div>';
-
-    try {
-      const menu = await SmartQRApi.get('getMenu');
-      
-      menuData = [];
-      menu.forEach(cat => {
-        cat.produits.forEach(p => {
-          menuData.push({
-            ...p,
-            categorieId: cat.id,
-            categorieNom: cat.nom
-          });
-        });
-      });
-
-      if (menuData.length === 0) {
-        container.innerHTML = `
-          <div style="text-align:center;padding:40px 20px;color:var(--text-secondary);">
-            <div style="font-size:48px;margin-bottom:12px;">📭</div>
-            <p>${t('toastNoMenu')}</p>
-            <p style="font-size:12px;margin-top:8px;">Ajoutez des plats avec le formulaire</p>
-          </div>
-        `;
-        return;
-      }
-
-      renderMenuTable(menuData);
-    } catch(err) {
-      console.error('Erreur refresh menu:', err);
-      container.innerHTML = `
-        <div style="text-align:center;padding:20px;color:var(--brick);">
-          ❌ Erreur: ${err.message}
-          <br><button class="btn btn-sm" style="margin-top:10px;width:auto;" onclick="refreshMenu()">🔄 Réessayer</button>
-        </div>
-      `;
-    }
-  }
-
-  function renderMenuTable(produits) {
-    const container = document.getElementById('menuListContainer');
-    const d = DICT[currentLang] || DICT.fr;
-
-    container.innerHTML = `
-      <table class="menu-table">
-        <thead>
-          <tr>
-            <th style="width:30px;">#</th>
-            <th style="width:40px;">📷</th>
-            <th>Nom</th>
-            <th style="text-align:right;">Prix</th>
-            <th style="text-align:center;">Statut</th>
-            <th style="text-align:center;">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${produits.map((p, i) => {
-            const nomFr = p.nom ? p.nom.split('|')[0].trim() : p.nom;
-            const catFr = p.categorieNom ? p.categorieNom.split('|')[0].trim() : '';
-            const isAvailable = p.disponible !== false;
-            return `
-            <tr>
-              <td>${i + 1}</td>
-              <td>
-                <img class="dish-img-sm" src="${p.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=50'}" 
-                     onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=50'">
-              </td>
-              <td>
-                <div style="font-weight:600;">${nomFr}</div>
-                <div style="font-size:11px;color:var(--text-secondary);">${catFr}</div>
-              </td>
-              <td style="text-align:right;font-family:monospace;font-weight:700;">${p.prix} DA</td>
-              <td style="text-align:center;">
-                <span class="status-dot ${isAvailable ? 'available' : 'unavailable'}"></span>
-                ${isAvailable ? d.available : d.unavailable}
-              </td>
-              <td style="text-align:center;">
-                <div class="action-group">
-                  <button class="btn btn-sm" style="background:var(--saffron);color:var(--text-inverse);" onclick="editProduit('${p.id}')">✏️</button>
-                  <button class="btn btn-sm btn-danger" onclick="quickDelete('${p.id}')">🗑️</button>
-                  <button class="btn btn-sm" style="background:var(--border-color);" onclick="toggleDispo('${p.id}')">${isAvailable ? '🔴' : '🟢'}</button>
-                </div>
-              </td>
-            </tr>
-          `}).join('')}
-        </tbody>
-      </table>
-    `;
-  }
-
-  // ---- PRODUIT ACTIONS ----
-  async function editProduit(id) {
-    try {
-      const produit = menuData.find(p => p.id === id);
-      if (produit) {
-        fillForm(produit);
-        document.querySelector('.panel-card .card-title').scrollIntoView({ behavior: 'smooth' });
-      }
-    } catch(err) {
-      showToast(t('toastError') + err.message, true);
-    }
-  }
-
-  async function quickDelete(id) {
-    if (!confirm(t('confirmDelete'))) return;
-    try {
-      const res = await SmartQRApi.post('deleteProduit', { produitId: id });
-      if(res.ok) {
-        showToast(t('toastDeleted'));
-        await loadDashboard();
-        await refreshMenu();
-        if (document.getElementById('editId').value === id) resetForm();
-      } else {
-        showToast(t('toastError') + (res.error || 'Inconnue'), true);
-      }
-    } catch(err) {
-      showToast(t('toastError') + err.message, true);
-    }
-  }
-
-  async function toggleDispo(id) {
-    try {
-      const produit = menuData.find(p => p.id === id);
-      if (!produit) return;
-      
-      const newDispo = produit.disponible === false;
-      const payload = {
-        ID: id,
-        Nom: produit.nom,
-        Description: produit.description || '',
-        CategorieID: produit.categorieId || '',
-        Prix: produit.prix || 0,
-        Image: produit.image || '',
-        Disponible: newDispo
-      };
-      
-      const res = await SmartQRApi.post('upsertProduit', { produit: payload });
-      if(res.ok) {
-        showToast(newDispo ? '🟢 Plat disponible' : '🔴 Plat épuisé');
-        await loadDashboard();
-        await refreshMenu();
-      }
-    } catch(err) {
-      showToast(t('toastError') + err.message, true);
-    }
-  }
-
-  // ---- DASHBOARD ----
-  async function loadDashboard() {
-    try {
-      const d = await SmartQRApi.get('getDashboard');
-      document.getElementById('kpi-ca').textContent = Number(d.ca || 0).toLocaleString('fr-FR') + ' DA';
-      document.getElementById('kpi-nb').textContent = d.nbCommandes || 0;
-      document.getElementById('kpi-panier').textContent = Number(d.panierMoyen || 0).toLocaleString('fr-FR') + ' DA';
-      document.getElementById('syncStatus').textContent = '🟢 Connecté';
-      document.getElementById('syncStatus').className = 'status-badge';
-      
-      await refreshMenu();
-      loadQRCodes();
-    } catch(err) {
-      console.error('Dashboard error:', err);
-      document.getElementById('syncStatus').textContent = '🔴 Hors ligne';
-      document.getElementById('syncStatus').className = 'status-badge offline';
-      showToast('⚠️ Impossible de charger les données', true);
-    }
-  }
-
-  // ---- QR CODES ----
-  async function loadQRCodes() {
-    const container = document.getElementById('qrContainer');
-    container.innerHTML = '<div style="color:var(--text-secondary);text-align:center;padding:20px;grid-column:1/-1;">⏳ Génération...</div>';
-
-    try {
-      const tables = await SmartQRApi.get('getTables');
-      const base = document.getElementById('frontUrl').value.replace(/\/$/,'');
-      
-      if(!tables || tables.length === 0) {
-        container.innerHTML = '<div style="color:var(--text-secondary);text-align:center;padding:20px;grid-column:1/-1;">Aucune table configurée pour ce magasin</div>';
-        return;
-      }
-
-      container.innerHTML = tables.map(t => {
-        // URL avec magasin et table
-        const url = `${base}/index.html?magasin=${currentMagasin}&table=${encodeURIComponent(t.ID)}`;
-        const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
-        return `<div class="qr-item">
-          <img src="${qrImg}" alt="QR ${t.Nom}" loading="lazy">
-          <span class="label">${t.Nom}</span>
-          <span class="url-small">${url}</span>
-        </div>`;
-      }).join('');
-
-      showToast(`✅ ${tables.length} QR codes générés pour ${currentMagasin}`);
-    } catch(err) {
-      console.error('QR error:', err);
-      container.innerHTML = `
-        <div style="color:var(--brick);text-align:center;padding:20px;grid-column:1/-1;">
-          ❌ Erreur: ${err.message}
-          <br><button class="btn btn-sm" style="margin-top:8px;width:auto;" onclick="loadQRCodes()">🔄 Réessayer</button>
-        </div>
-      `;
-    }
-  }
-
-  // ---- TOAST ----
-  function showToast(msg, error = false) {
-    const t = document.getElementById('toast');
-    document.getElementById('toastMsg').textContent = msg;
-    t.className = 'toast' + (error ? ' error' : '');
-    setTimeout(() => t.classList.add('show'), 10);
-    setTimeout(() => t.classList.remove('show'), 5000);
-  }
-
-  // ---- AUTO REFRESH ----
-  let refreshInterval = setInterval(() => {
-    if (!document.getElementById('lockScreen').style.display === 'none') {
-      loadDashboard();
-    }
-  }, 30000);
-
-  window.addEventListener('beforeunload', () => clearInterval(refreshInterval));
-
-  // ---- LOAD ON START ----
-  if(sessionStorage.getItem('smartqr_auth') === 'true') {
-    setTimeout(() => {
-      loadDashboard();
-      loadMagasins();
-    }, 500);
-  }
-</script>
+        loadDashboard();
+        setInterval(loadDashboard, 30000);
+    </script>
 </body>
 </html>

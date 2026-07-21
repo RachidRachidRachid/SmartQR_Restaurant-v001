@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SmartQR • Caisse POS</title>
+    <title>SmartQR • Serveur</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,6 +11,7 @@
             --success: #2ECC71;
             --danger: #E74C3C;
             --warning: #F39C12;
+            --info: #3498DB;
             --bg: #0A0A0F;
             --bg-card: #14141C;
             --text: #F0F0F5;
@@ -56,13 +57,6 @@
             font-size: 24px;
         }
         .header h1 span { color: var(--primary); }
-        .header-stats {
-            display: flex;
-            gap: 20px;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        .header-stats strong { color: var(--text); }
 
         .btn {
             padding: 6px 18px;
@@ -80,7 +74,7 @@
 
         .grid-2 {
             display: grid;
-            grid-template-columns: 1.2fr 1fr;
+            grid-template-columns: 1.2fr 0.8fr;
             gap: 20px;
         }
         .panel {
@@ -114,10 +108,14 @@
             border-color: var(--primary);
             background: rgba(232,163,61,0.06);
         }
-        .ticket-item .table { font-weight: 700; font-size: 14px; }
-        .ticket-item .time { font-size: 11px; color: var(--text-secondary); }
-        .ticket-item .amount { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
-
+        .ticket-item .table {
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .ticket-item .time {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
         .status-tag {
             padding: 2px 12px;
             border-radius: 12px;
@@ -128,57 +126,7 @@
         .status-tag.new { background: var(--info); color: #fff; }
         .status-tag.prep { background: var(--warning); color: #fff; }
         .status-tag.ready { background: var(--success); color: #fff; }
-
-        .bill-preview {
-            border-top: 2px solid var(--border);
-            border-bottom: 2px solid var(--border);
-            padding: 14px 0;
-            margin: 12px 0;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-        }
-        .bill-line {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-        }
-        .bill-total {
-            display: flex;
-            justify-content: space-between;
-            font-size: 20px;
-            font-weight: 800;
-            padding: 12px 0;
-            border-top: 2px solid var(--border);
-            margin-top: 8px;
-            color: var(--primary);
-        }
-
-        .btn-pay {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: 'Inter', sans-serif;
-        }
-        .btn-pay.print {
-            background: var(--primary);
-            color: var(--text-inverse);
-            margin-bottom: 8px;
-        }
-        .btn-pay.cash {
-            background: var(--success);
-            color: #fff;
-        }
-        .btn-pay:hover { transform: scale(1.01); }
-        .btn-pay:disabled {
-            background: var(--text-muted);
-            cursor: not-allowed;
-            transform: none;
-        }
+        .status-tag.delivered { background: var(--primary); color: var(--text-inverse); }
 
         .empty-state {
             text-align: center;
@@ -186,6 +134,26 @@
             color: var(--text-secondary);
         }
         .empty-state .icon { font-size: 40px; margin-bottom: 8px; }
+
+        .btn-deliver {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: var(--primary);
+            color: var(--text-inverse);
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-deliver:hover { transform: scale(1.01); }
+        .btn-deliver:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+        }
 
         .toast {
             position: fixed;
@@ -210,18 +178,15 @@
         @media (max-width: 768px) {
             .grid-2 { grid-template-columns: 1fr; }
             .header h1 { font-size: 18px; }
-            .header-stats { font-size: 12px; flex-wrap: wrap; gap: 10px; }
         }
     </style>
 </head>
 <body>
 
     <header class="header">
-        <h1>💳 Caisse <span>POS</span></h1>
-        <div class="header-stats">
-            <span>En attente: <strong id="pendingCount">0</strong></span>
-            <span>Total CA: <strong id="totalCA">0 DA</strong></span>
-            <button class="btn btn-primary" onclick="loadOrders()">🔄</button>
+        <h1>👨‍💼 Serveur • <span>Livraison</span></h1>
+        <div>
+            <button class="btn btn-primary" onclick="loadOrders()">🔄 Rafraîchir</button>
             <button class="btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
         </div>
     </header>
@@ -229,17 +194,17 @@
     <div class="grid-2">
         <div class="panel">
             <div class="panel-title">
-                <span>📋 Commandes</span>
+                <span>📋 Commandes à livrer</span>
                 <span id="ticketCount" style="font-size:13px;font-weight:400;color:var(--text-secondary);">0</span>
             </div>
             <div id="ticketList" style="max-height:65vh;overflow-y:auto;">
-                <div class="empty-state"><div class="icon">✅</div><p>Aucune commande en attente</p></div>
+                <div class="empty-state"><div class="icon">✅</div><p>Toutes les commandes sont livrées</p></div>
             </div>
         </div>
 
         <div class="panel">
-            <div class="panel-title">🧾 Facture</div>
-            <div id="billArea">
+            <div class="panel-title">📍 Détails de la commande</div>
+            <div id="detailArea">
                 <div class="empty-state"><div class="icon">👆</div><p>Sélectionnez une commande</p></div>
             </div>
         </div>
@@ -250,7 +215,7 @@
     <script src="config.js"></script>
     <script>
         // ============================================================
-        // SMARTQR CAISSE POS - VERSION CERTIFIÉE PRO
+        // SMARTQR SERVEUR - VERSION CERTIFIÉE PRO
         // ============================================================
 
         let currentTheme = localStorage.getItem('smartqr_theme') || 'dark';
@@ -275,16 +240,12 @@
                 orders.sort((a, b) => new Date(b.dateHeure) - new Date(a.dateHeure));
 
                 document.getElementById('ticketCount').textContent = orders.length;
-                document.getElementById('pendingCount').textContent = orders.length;
-                const total = orders.reduce((s, o) => s + (Number(o.total) || 0), 0);
-                document.getElementById('totalCA').textContent = total.toLocaleString() + ' DA';
-
                 renderTickets();
 
                 if (selectedOrder) {
                     const fresh = orders.find(o => o.id === selectedOrder.id);
-                    if (fresh) { selectedOrder = fresh; renderBill(fresh); }
-                    else { selectedOrder = null; resetBill(); }
+                    if (fresh) { selectedOrder = fresh; renderDetail(fresh); }
+                    else { selectedOrder = null; resetDetail(); }
                 }
             } catch (err) {
                 showToast('❌ ' + err.message, 'error');
@@ -294,7 +255,7 @@
         function renderTickets() {
             const container = document.getElementById('ticketList');
             if (orders.length === 0) {
-                container.innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>Toutes les commandes sont servies</p></div>`;
+                container.innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>Toutes les commandes sont livrées</p></div>`;
                 return;
             }
 
@@ -309,8 +270,8 @@
                             <div class="table">📍 ${o.tableId}</div>
                             <div class="time">${new Date(o.dateHeure).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</div>
                         </div>
-                        <div style="display:flex;align-items:center;gap:10px;">
-                            <span class="amount">${(Number(o.total) || 0).toLocaleString()} DA</span>
+                        <div style="text-align:right;">
+                            <div style="font-weight:700;">${(Number(o.total) || 0).toLocaleString()} DA</div>
                             <span class="status-tag ${statusMap[o.statut] || 'new'}">${statusLabel[o.statut] || o.statut}</span>
                         </div>
                     </div>
@@ -322,43 +283,55 @@
             selectedOrder = orders.find(o => o.id === id);
             if (selectedOrder) {
                 renderTickets();
-                renderBill(selectedOrder);
+                renderDetail(selectedOrder);
             }
         }
 
-        function renderBill(order) {
-            const area = document.getElementById('billArea');
+        function renderDetail(order) {
+            const area = document.getElementById('detailArea');
+            const statusMap = { 'nouvelle': 'Reçu en cuisine', 'en_preparation': 'En préparation', 'prete': 'Prêt à servir' };
+
             area.innerHTML = `
-                <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);margin-bottom:10px;">
-                    <span><strong>N°</strong> ${order.id.slice(0,12)}</span>
-                    <span><strong>Table</strong> ${order.tableId}</span>
-                    <span>${new Date(order.dateHeure).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</span>
+                <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);">
+                    <div style="display:flex;justify-content:space-between;font-size:13px;">
+                        <span><strong>Table:</strong> ${order.tableId}</span>
+                        <span><strong>N°</strong> ${order.id.slice(0,12)}</span>
+                    </div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+                        ${new Date(order.dateHeure).toLocaleString('fr-FR')}
+                    </div>
                 </div>
-                <div class="bill-preview">
+                <div style="margin-bottom:14px;">
                     ${order.items.map(i => `
-                        <div class="bill-line">
-                            <span>${i.qte} × ${i.nom ? i.nom.split('|')[0].trim() : i.nom}</span>
-                            <span>${(i.qte * i.prixUnitaire).toLocaleString()} DA</span>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border);font-size:14px;">
+                            <span>${i.qte}× ${i.nom ? i.nom.split('|')[0].trim() : i.nom}</span>
+                            <span style="font-weight:600;">${(i.qte * i.prixUnitaire).toLocaleString()} DA</span>
                         </div>
                     `).join('')}
                 </div>
-                <div class="bill-total">
+                <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:800;padding:12px 0;border-top:2px solid var(--border);margin-bottom:14px;">
                     <span>TOTAL</span>
-                    <span>${(Number(order.total) || 0).toLocaleString()} DA</span>
+                    <span style="color:var(--primary);">${(Number(order.total) || 0).toLocaleString()} DA</span>
                 </div>
-                <button class="btn-pay print" onclick="printBill('${order.id}')">🖨️ Imprimer</button>
-                <button class="btn-pay cash" onclick="payOrder('${order.id}', this)">💰 Encaisser</button>
+                <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+                    Statut: <strong style="color:var(--text);">${statusMap[order.statut] || order.statut}</strong>
+                </div>
+                ${order.statut === 'prete' ? `
+                    <button class="btn-deliver" onclick="deliverOrder('${order.id}', this)">🚚 Livrer la commande</button>
+                ` : `
+                    <button class="btn-deliver" disabled style="background:var(--text-muted);">⏳ En attente de préparation</button>
+                `}
             `;
         }
 
-        function resetBill() {
-            document.getElementById('billArea').innerHTML = `
+        function resetDetail() {
+            document.getElementById('detailArea').innerHTML = `
                 <div class="empty-state"><div class="icon">👆</div><p>Sélectionnez une commande</p></div>
             `;
         }
 
-        async function payOrder(orderId, btn) {
-            if (!confirm('Confirmer l\'encaissement de cette commande ?')) return;
+        async function deliverOrder(orderId, btn) {
+            if (!confirm('Confirmer la livraison de cette commande ?')) return;
             btn.disabled = true;
             btn.textContent = '⏳...';
 
@@ -368,10 +341,10 @@
                     statut: 'servie'
                 });
                 if (res.ok) {
-                    showToast('✅ Paiement validé !', 'success');
+                    showToast('✅ Commande livrée avec succès !', 'success');
                     selectedOrder = null;
                     loadOrders();
-                    resetBill();
+                    resetDetail();
                 } else {
                     showToast('❌ ' + (res.error || 'Erreur'), 'error');
                     btn.disabled = false;
@@ -380,50 +353,6 @@
                 showToast('❌ ' + err.message, 'error');
                 btn.disabled = false;
             }
-        }
-
-        function printBill(orderId) {
-            const order = orders.find(o => o.id === orderId);
-            if (!order) return;
-            const win = window.open('', '_blank', 'width=400,height=600');
-            win.document.write(`
-                <html><head><title>Facture ${orderId}</title>
-                <style>
-                    body { font-family: 'Courier New', monospace; padding: 20px; max-width: 320px; margin: 0 auto; background: #fff; color: #000; }
-                    h2 { text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; font-size: 18px; }
-                    .line { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
-                    .total { font-size: 18px; font-weight: bold; border-top: 2px solid #000; padding-top: 10px; margin-top: 10px; display: flex; justify-content: space-between; }
-                    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; border-top: 1px dashed #ccc; padding-top: 12px; }
-                    .meta { font-size: 12px; color: #666; margin-bottom: 8px; display: flex; justify-content: space-between; }
-                    hr { border: none; border-top: 1px dashed #ccc; }
-                </style>
-                </head><body>
-                <h2>🧾 FACTURE</h2>
-                <div class="meta">
-                    <span>Table: ${order.tableId}</span>
-                    <span>${new Date(order.dateHeure).toLocaleString('fr-FR')}</span>
-                </div>
-                <hr>
-                ${order.items.map(i => `
-                    <div class="line">
-                        <span>${i.qte}× ${i.nom ? i.nom.split('|')[0].trim() : i.nom}</span>
-                        <span>${(i.qte * i.prixUnitaire).toLocaleString()} DA</span>
-                    </div>
-                `).join('')}
-                <div class="total">
-                    <span>TOTAL</span>
-                    <span>${(Number(order.total) || 0).toLocaleString()} DA</span>
-                </div>
-                <div class="footer">
-                    Merci de votre visite !<br>
-                    SmartQR Restaurant
-                </div>
-                <script>
-                    window.print();
-                    window.close();
-                <\/script>
-            `);
-            win.document.close();
         }
 
         function showToast(msg, type = '') {
@@ -436,7 +365,7 @@
         }
 
         loadOrders();
-        setInterval(loadOrders, 15000);
+        setInterval(loadOrders, 10000);
     </script>
 </body>
 </html>

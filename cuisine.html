@@ -1,347 +1,461 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Écran Cuisine — SmartQR Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700&family=IBM+Plex+Mono:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0D0E10; --card: #18191D; --border: #262930;
-    --text: #E4E7EB; --text-soft: #88909B;
-    --primary: #E8A33D; --success: #4C8C4A; --warning: #E67E22;
-    --radius:12px;
-  }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { 
-    background:var(--bg); color:var(--text); 
-    font-family:'Inter',sans-serif; padding:16px;
-    min-height:100vh;
-  }
-  
-  .header {
-    display:flex; justify-content:space-between; align-items:center;
-    margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border);
-    flex-wrap:wrap; gap:8px;
-  }
-  .header h1 { font-family:'Fraunces',serif; font-size:22px; }
-  .header-controls { display:flex; align-items:center; gap:12px; }
-  .refresh-badge { 
-    font-family:'IBM Plex Mono',monospace; font-size:11px; 
-    color:var(--text-soft); background:var(--card); 
-    padding:4px 12px; border-radius:6px;
-  }
-  .refresh-btn {
-    background:var(--card); border:1px solid var(--border);
-    color:var(--text); padding:6px 14px; border-radius:6px;
-    cursor:pointer; font-size:12px; font-weight:600;
-    transition:0.2s;
-  }
-  .refresh-btn:hover { border-color:var(--primary); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SmartQR • Cuisine KDS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E8A33D;
+            --success: #2ECC71;
+            --danger: #E74C3C;
+            --warning: #F39C12;
+            --info: #3498DB;
+            
+            --bg: #0A0A0F;
+            --bg-card: #14141C;
+            --bg-input: #1A1A24;
+            --text: #F0F0F5;
+            --text-secondary: #8A8AA0;
+            --text-muted: #5A5A70;
+            --border: #2A2A3A;
+            --border-light: #3A3A4A;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 8px 40px rgba(0,0,0,0.3);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        [data-theme="light"] {
+            --bg: #F5F3F0;
+            --bg-card: #FFFFFF;
+            --bg-input: #F0EDEA;
+            --text: #1A1A1A;
+            --text-secondary: #6B6459;
+            --text-muted: #A09888;
+            --border: #E5E0D8;
+            --border-light: #D5D0C8;
+            --shadow: 0 8px 40px rgba(0,0,0,0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 16px 20px 30px;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-  .kanban { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-  
-  .column { 
-    background:rgba(24,25,29,0.5); border-radius:var(--radius);
-    padding:16px; border:1px solid var(--border); min-height:70vh;
-  }
-  .column h2 { 
-    font-size:15px; font-weight:700; margin-bottom:16px; 
-    display:flex; justify-content:space-between; align-items:center;
-  }
-  .count { 
-    background:var(--border); padding:2px 10px; border-radius:10px; 
-    font-size:12px; font-family:'IBM Plex Mono',monospace;
-  }
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid var(--border);
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header h1 .badge {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+        }
+        .status-badge {
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--success);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+        .status-badge.offline { background: var(--danger); }
+        .status-badge.warning { background: var(--warning); }
 
-  .order-card {
-    background:var(--card); border:1px solid var(--border);
-    border-radius:var(--radius); padding:14px; margin-bottom:12px;
-    transition:0.2s; animation: slideIn 0.3s ease;
-  }
-  .order-card:hover { border-color:rgba(232,163,61,0.3); }
-  
-  @keyframes slideIn {
-    from { opacity:0; transform:translateY(-8px); }
-    to { opacity:1; transform:translateY(0); }
-  }
+        .btn {
+            padding: 6px 18px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+        .btn:hover { border-color: var(--primary); }
+        .btn-primary { background: var(--primary); color: var(--text-inverse); border-color: var(--primary); }
 
-  .order-meta {
-    display:flex; justify-content:space-between;
-    font-family:'IBM Plex Mono',monospace; font-size:12px;
-    color:var(--text-soft); margin-bottom:10px;
-  }
-  .order-table {
-    color:#fff; font-weight:700; font-size:13px;
-    background:rgba(232,103,61,0.15); padding:2px 8px; border-radius:4px;
-  }
-  .order-time { background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:4px; }
-  
-  .items-list { list-style:none; margin-bottom:12px; }
-  .items-list li { 
-    padding:4px 0; border-bottom:1px dashed rgba(255,255,255,0.05);
-    font-size:14px; display:flex; justify-content:space-between;
-  }
-  .qty { 
-    font-weight:700; color:var(--primary); 
-    font-family:'IBM Plex Mono',monospace; margin-right:6px;
-  }
-  
-  .notes { 
-    font-size:12px; color:#C1483D; 
-    background:rgba(193,72,61,0.1); padding:6px 10px;
-    border-radius:6px; margin-top:8px; font-style:italic;
-  }
+        /* KANBAN */
+        .kanban {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .column {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            min-height: 60vh;
+            transition: border var(--transition);
+        }
+        .column:hover { border-color: var(--border-light); }
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            font-weight: 700;
+            font-size: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .column-header .count {
+            background: var(--bg-input);
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+        }
 
-  .action-btn {
-    width:100%; border:none; padding:10px; border-radius:8px;
-    font-weight:700; font-size:13px; cursor:pointer;
-    transition:0.2s; color:#000;
-  }
-  .action-btn:active { transform:scale(0.97); }
-  .action-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
-  .action-btn.prep { background:#3498db; color:#fff; }
-  .action-btn.ready { background:var(--success); color:#fff; }
-  .action-btn:hover:not(:disabled) { filter:brightness(1.1); }
+        /* ORDER CARD */
+        .order-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            transition: all var(--transition);
+            animation: slideIn 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        .order-card:hover { border-color: var(--primary); }
+        .order-card.priority { border-left-color: var(--danger); }
 
-  .empty-state {
-    text-align:center; padding:40px 20px; color:var(--text-soft);
-    font-size:13px;
-  }
-  .empty-state .icon { font-size:32px; margin-bottom:8px; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-  /* Sound notification dot */
-  .has-orders::after {
-    content: '●';
-    color:var(--primary);
-    animation: pulse 1.5s ease-in-out infinite;
-    margin-left:6px;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity:1; }
-    50% { opacity:0.2; }
-  }
+        .order-meta {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+        .order-table {
+            background: rgba(232,163,61,0.12);
+            padding: 2px 12px;
+            border-radius: 4px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .order-time {
+            background: var(--bg-input);
+            padding: 2px 10px;
+            border-radius: 4px;
+        }
 
-  @media (max-width:768px) {
-    .kanban { grid-template-columns:1fr; }
-    .header h1 { font-size:18px; }
-    body { padding:12px; }
-  }
-</style>
+        .order-items {
+            list-style: none;
+            margin-bottom: 12px;
+        }
+        .order-items li {
+            padding: 4px 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .order-items .qty {
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            margin-right: 6px;
+        }
+
+        .order-notes {
+            font-size: 12px;
+            color: var(--danger);
+            background: rgba(231,76,60,0.06);
+            padding: 6px 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 2px solid var(--danger);
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-action.prep {
+            background: var(--warning);
+            color: var(--text-inverse);
+        }
+        .btn-action.ready {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-action:hover { transform: scale(1.01); }
+        .btn-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-state .icon { font-size: 44px; margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            font-weight: 600;
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+
+        @media (max-width: 768px) {
+            .kanban { grid-template-columns: 1fr; }
+            .header h1 { font-size: 18px; }
+            .header-left { flex-wrap: wrap; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 10px 12px 20px; }
+            .column { padding: 12px; }
+            .order-card { padding: 10px 12px; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>👨‍🍳 Cuisine</h1>
-  <div class="header-controls">
-    <span class="refresh-badge" id="syncStatus">🔄 Synchro...</span>
-    <button class="refresh-btn" onclick="fetchKitchenOrders()">↻</button>
-  </div>
-</div>
-
-<div class="kanban">
-  <div class="column">
-    <h2>📥 À Préparer <span class="count" id="count-new">0</span></h2>
-    <div id="list-new"></div>
-  </div>
-  <div class="column">
-    <h2>🔥 En Cuisson <span class="count" id="count-prep">0</span></h2>
-    <div id="list-prep"></div>
-  </div>
-</div>
-
-<!-- Audio Notification -->
-<audio id="notifSound" preload="auto">
-  <source src="data:audio/wav;base64,U1RBQwAA..." type="audio/wav">
-</audio>
-
-<script src="config.js"></script>
-<script>
-  // ---- STATE ----
-  let previousCount = 0;
-  let soundEnabled = true;
-
-  // ---- HELPERS ----
-  function parseDishName(raw) {
-    if (!raw) return '';
-    return raw.split('|')[0].trim();
-  }
-
-  // ---- FETCH ORDERS ----
-  async function fetchKitchenOrders() {
-    const statusEl = document.getElementById('syncStatus');
-    statusEl.textContent = '🔄 Synchronisation...';
-
-    try {
-      const allOrders = await SmartQRApi.get('getOrders');
-      
-      const newOrders = allOrders.filter(o => o.statut === 'nouvelle');
-      const prepOrders = allOrders.filter(o => o.statut === 'en_preparation');
-
-      // Notification sonore si nouvelle commande
-      if (newOrders.length > previousCount && soundEnabled) {
-        playNotification();
-      }
-      previousCount = newOrders.length;
-
-      document.getElementById('count-new').textContent = newOrders.length;
-      document.getElementById('count-prep').textContent = prepOrders.length;
-
-      // Update title with count
-      const titleEl = document.querySelector('.header h1');
-      if (newOrders.length > 0) {
-        titleEl.innerHTML = `👨‍🍳 Cuisine <span style="color:var(--primary);font-size:14px;">(${newOrders.length} nouvelles)</span>`;
-      } else {
-        titleEl.innerHTML = '👨‍🍳 Cuisine';
-      }
-
-      renderColumn('list-new', newOrders, 'prep', '⚡ Commencer');
-      renderColumn('list-prep', prepOrders, 'ready', '✅ Prêt !');
-
-      statusEl.textContent = `⏳ ${new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}`;
-    } catch (err) {
-      statusEl.textContent = '⚠️ Erreur';
-      console.error('Fetch error:', err);
-    }
-  }
-
-  // ---- RENDER COLUMN ----
-  function renderColumn(containerId, orders, type, btnText) {
-    const container = document.getElementById(containerId);
-    
-    if (orders.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <div class="icon">✅</div>
-          Rien à faire ici
+    <header class="header">
+        <div class="header-left">
+            <h1>
+                👨‍🍳 Cuisine
+                <span class="badge" id="orderCount">0 en attente</span>
+            </h1>
+            <span class="status-badge" id="syncStatus">🟢 Connecté</span>
         </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = orders.map(o => `
-      <div class="order-card">
-        <div class="order-meta">
-          <span class="order-table">📍 ${o.tableId}</span>
-          <span class="order-time">${new Date(o.dateHeure).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</span>
+        <div>
+            <button class="btn btn-primary" onclick="loadOrders()">🔄 Rafraîchir</button>
+            <button class="btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
         </div>
-        <ul class="items-list">
-          ${o.items.map(i => `
-            <li>
-              <span><span class="qty">${i.qte}×</span> ${parseDishName(i.nom)}</span>
-            </li>
-          `).join('')}
-        </ul>
-        ${o.notes ? `<div class="notes">💡 ${o.notes}</div>` : ''}
-        <button class="action-btn ${type}" 
-                onclick="changeStatus('${o.id}', '${type === 'prep' ? 'en_preparation' : 'prete'}', this)">
-          ${btnText}
-        </button>
-      </div>
-    `).join('');
-  }
+    </header>
 
-  // ---- CHANGE STATUS ----
-  async function changeStatus(orderId, nextStatus, btn) {
-    btn.disabled = true;
-    btn.textContent = '⏳...';
+    <div class="kanban">
+        <div class="column">
+            <div class="column-header">
+                <span>📥 À Préparer</span>
+                <span class="count" id="countNew">0</span>
+            </div>
+            <div id="listNew">
+                <div class="empty-state"><div class="icon">✅</div><p>Tout est prêt</p></div>
+            </div>
+        </div>
+        <div class="column">
+            <div class="column-header">
+                <span>🔥 En Cuisson</span>
+                <span class="count" id="countPrep">0</span>
+            </div>
+            <div id="listPrep">
+                <div class="empty-state"><div class="icon">⏳</div><p>Aucune commande en cours</p></div>
+            </div>
+        </div>
+    </div>
 
-    try {
-      const res = await SmartQRApi.post('updateOrderStatus', {
-        commandeId: orderId,
-        statut: nextStatus
-      });
-      
-      if (res.ok) {
-        fetchKitchenOrders();
-      } else {
-        alert('❌ ' + (res.error || 'Erreur'));
-        btn.disabled = false;
-      }
-    } catch (err) {
-      alert('❌ ' + err.message);
-      btn.disabled = false;
-    }
-  }
+    <div class="toast" id="toast"></div>
 
-  // ---- NOTIFICATION SONORE ----
-  function playNotification() {
-    try {
-      // Créer un bip avec l'API Audio
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 800;
-      osc.type = 'sine';
-      gain.gain.value = 0.15;
-      osc.start();
-      setTimeout(() => {
-        osc.frequency.value = 1000;
-        setTimeout(() => {
-          osc.stop();
-          ctx.close();
-        }, 150);
-      }, 150);
-    } catch (e) {
-      // Fallback: utiliser l'élément audio si disponible
-      try {
-        const audio = document.getElementById('notifSound');
-        if (audio) audio.play().catch(() => {});
-      } catch (e2) {}
-    }
-  }
+    <script src="config.js"></script>
+    <script>
+        // ============================================================
+        // SMARTQR CUISINE - VERSION CERTIFIÉE PRO
+        // ============================================================
 
-  // ---- AUTO-REFRESH ----
-  let refreshInterval = setInterval(fetchKitchenOrders, 10000);
+        let currentTheme = localStorage.getItem('smartqr_theme') || 'dark';
+        let orders = [];
+        let audioCtx = null;
+        let previousNewCount = 0;
 
-  // ---- INIT ----
-  fetchKitchenOrders();
-
-  // Notification de nouvelles commandes via WebSocket simulé
-  // On vérifie plus fréquemment les nouvelles commandes
-  setInterval(() => {
-    // Vérification silencieuse
-    SmartQRApi.get('getOrders')
-      .then(orders => {
-        const newCount = orders.filter(o => o.statut === 'nouvelle').length;
-        if (newCount > previousCount && soundEnabled) {
-          playNotification();
+        // ---- THEME ----
+        applyTheme(currentTheme);
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('smartqr_theme', currentTheme);
+            applyTheme(currentTheme);
         }
-        previousCount = newCount;
-      })
-      .catch(() => {});
-  }, 5000);
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            document.getElementById('themeBtn').textContent = theme === 'dark' ? '🌙' : '☀️';
+        }
 
-  // Nettoyer les intervalles
-  window.addEventListener('beforeunload', () => {
-    clearInterval(refreshInterval);
-  });
+        // ---- LOAD ORDERS ----
+        async function loadOrders() {
+            const statusEl = document.getElementById('syncStatus');
+            statusEl.textContent = '🔄 Synchronisation...';
+            statusEl.className = 'status-badge warning';
 
-  // Toggle son (clic sur le titre)
-  document.querySelector('.header h1')?.addEventListener('dblclick', () => {
-    soundEnabled = !soundEnabled;
-    showToast(soundEnabled ? '🔊 Sons activés' : '🔇 Sons désactivés');
-  });
+            try {
+                const allOrders = await SmartQRApi.get('getOrders');
+                orders = allOrders;
 
-  function showToast(msg) {
-    const t = document.createElement('div');
-    t.style.cssText = `
-      position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
-      background:var(--card); color:var(--text); padding:10px 20px;
-      border-radius:8px; border:1px solid var(--border);
-      font-size:13px; z-index:100; transition:0.3s;
-      opacity:0; pointer-events:none;
-    `;
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(() => t.style.opacity = '1', 10);
-    setTimeout(() => {
-      t.style.opacity = '0';
-      setTimeout(() => t.remove(), 400);
-    }, 2000);
-  }
-</script>
+                const newOrders = orders.filter(o => o.statut === 'nouvelle');
+                const prepOrders = orders.filter(o => o.statut === 'en_preparation');
+
+                // Notification sonore pour nouvelles commandes
+                if (newOrders.length > previousNewCount) {
+                    playNotification();
+                    showToast('🔔 ' + (newOrders.length - previousNewCount) + ' nouvelle(s) commande(s)!', 'success');
+                }
+                previousNewCount = newOrders.length;
+
+                document.getElementById('countNew').textContent = newOrders.length;
+                document.getElementById('countPrep').textContent = prepOrders.length;
+                document.getElementById('orderCount').textContent = (newOrders.length + prepOrders.length) + ' en attente';
+
+                renderColumn('listNew', newOrders, 'prep', '⚡ Démarrer');
+                renderColumn('listPrep', prepOrders, 'ready', '✅ Prêt');
+
+                statusEl.textContent = '🟢 Connecté';
+                statusEl.className = 'status-badge';
+
+            } catch (err) {
+                console.error('Load error:', err);
+                statusEl.textContent = '🔴 Hors ligne';
+                statusEl.className = 'status-badge offline';
+                showToast('❌ ' + err.message, 'error');
+            }
+        }
+
+        function renderColumn(containerId, orders, type, btnText) {
+            const container = document.getElementById(containerId);
+            if (orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">${type === 'prep' ? '✅' : '⏳'}</div>
+                        <p>${type === 'prep' ? 'Aucune commande à préparer' : 'Aucune commande en cours'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = orders.map(o => `
+                <div class="order-card ${o.notes ? 'priority' : ''}">
+                    <div class="order-meta">
+                        <span class="order-table">📍 ${o.tableId}</span>
+                        <span class="order-time">${new Date(o.dateHeure).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <ul class="order-items">
+                        ${o.items.map(i => `
+                            <li>
+                                <span><span class="qty">${i.qte}×</span> ${i.nom ? i.nom.split('|')[0].trim() : i.nom}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    ${o.notes ? `<div class="order-notes">💡 ${o.notes}</div>` : ''}
+                    <button class="btn-action ${type}" onclick="updateStatus('${o.id}', '${type === 'prep' ? 'en_preparation' : 'prete'}', this)">
+                        ${btnText}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // ---- UPDATE STATUS ----
+        async function updateStatus(orderId, nextStatus, btn) {
+            btn.disabled = true;
+            btn.textContent = '⏳...';
+
+            try {
+                const res = await SmartQRApi.post('updateOrderStatus', {
+                    commandeId: orderId,
+                    statut: nextStatus
+                });
+                if (res.ok) {
+                    showToast('✅ Statut mis à jour', 'success');
+                    loadOrders();
+                } else {
+                    showToast('❌ ' + (res.error || 'Erreur'), 'error');
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                showToast('❌ ' + err.message, 'error');
+                btn.disabled = false;
+            }
+        }
+
+        // ---- NOTIFICATION SONORE ----
+        function playNotification() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 880;
+                osc.type = 'sine';
+                gain.gain.value = 0.12;
+                osc.start();
+                setTimeout(() => { osc.frequency.value = 1100; }, 100);
+                setTimeout(() => { osc.frequency.value = 1320; }, 200);
+                setTimeout(() => { osc.stop(); }, 350);
+            } catch (e) { /* Fallback silencieux */ }
+        }
+
+        // ---- TOAST ----
+        function showToast(msg, type = '') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast' + (type ? ' ' + type : '');
+            setTimeout(() => t.classList.add('show'), 10);
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+        }
+
+        // ---- AUTO REFRESH ----
+        loadOrders();
+        setInterval(loadOrders, 8000);
+    </script>
 </body>
 </html>
